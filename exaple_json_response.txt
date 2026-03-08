@@ -1,0 +1,374 @@
+{
+  "currentTime": 1772818348163,
+  "version": 2,
+  "status": "OK",
+  "code": 200,
+  "text": "OK",
+  "data": {
+    "limitExceeded": false,
+    "entry": {
+      "stopId": "BKK_F02262",
+      "routeIds": [
+        "BKK_0530",
+        "BKK_1500",
+        "BKK_1502",
+        "BKK_1540"
+      ],
+      "alertIds": [],
+      "nearbyStopIds": [],
+      "stopTimes": [
+        {
+          "stopHeadsign": "Budat\u00e9t\u00e9ny vas\u00fat\u00e1llom\u00e1s (Campona)",
+          "arrivalTime": 1772818380,
+          "departureTime": 1772818380,
+          "predictedArrivalTime": 1772818367,
+          "predictedDepartureTime": 1772818367,
+          "stopSequence": 5,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D10190758",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        },
+        {
+          "stopHeadsign": "Mindszenty J\u00f3zsef b\u00edboros t\u00e9r",
+          "arrivalTime": 1772818380,
+          "departureTime": 1772818380,
+          "predictedArrivalTime": 1772818452,
+          "predictedDepartureTime": 1772818452,
+          "stopSequence": 5,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D1064716888",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        },
+        {
+          "stopHeadsign": "Mindszenty J\u00f3zsef b\u00edboros t\u00e9r",
+          "arrivalTime": 1772818980,
+          "departureTime": 1772818980,
+          "stopSequence": 5,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D1064715951",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        },
+        {
+          "stopHeadsign": "Gazdagr\u00e9ti t\u00e9r",
+          "arrivalTime": 1772819400,
+          "departureTime": 1772819400,
+          "stopSequence": 7,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D104545252",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        },
+        {
+          "stopHeadsign": "Budat\u00e9t\u00e9ny vas\u00fat\u00e1llom\u00e1s (Campona)",
+          "arrivalTime": 1772819580,
+          "departureTime": 1772819580,
+          "stopSequence": 5,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D10190763",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        },
+        {
+          "stopHeadsign": "Mindszenty J\u00f3zsef b\u00edboros t\u00e9r",
+          "arrivalTime": 1772819580,
+          "departureTime": 1772819580,
+          "stopSequence": 5,
+          "requiresFirstDoorBoarding": true,
+          "tripId": "BKK_D1064715896",
+          "serviceDate": "20260306",
+          "wheelchairAccessible": true,
+          "mayRequireBooking": false,
+          "canceled": false,
+          "alertIds": [],
+          "pickupAllowed": true,
+          "dropOffAllowed": true
+        }
+      ]
+    },
+    "references": {
+      "agencies": {
+        "BKK_BKK": {
+          "id": "BKK_BKK",
+          "name": "BKK",
+          "url": "http://www.bkk.hu",
+          "timezone": "Europe/Budapest",
+          "lang": "hu",
+          "phone": "+36 1 3 255 255"
+        }
+      },
+      "routes": {
+        "BKK_0530": {
+          "id": "BKK_0530",
+          "shortName": "53",
+          "description": "Mindszenty J. b\u00edboros t\u00e9r | \u00dajbuda-k\u00f6zpont M",
+          "type": "BUS",
+          "url": "https://bkk.hu/menetrendek/#53",
+          "color": "009EE3",
+          "textColor": "FFFFFF",
+          "agencyId": "BKK_BKK",
+          "iconDisplayType": "BOX",
+          "iconDisplayText": "53",
+          "bikesAllowed": false,
+          "style": {
+            "color": "009EE3",
+            "icon": {
+              "type": "BOX",
+              "text": "53",
+              "textColor": "FFFFFF"
+            },
+            "vehicleIcon": {
+              "name": "bus",
+              "color": "009EE3",
+              "secondaryColor": "FFFFFF"
+            },
+            "groupId": 5
+          },
+          "sortOrder": 126
+        },
+        "BKK_1540": {
+          "id": "BKK_1540",
+          "shortName": "154",
+          "description": "Infopark - BudaPart | Gazdagr\u00e9ti t\u00e9r",
+          "type": "BUS",
+          "url": "https://bkk.hu/menetrendek/#154",
+          "color": "009EE3",
+          "textColor": "FFFFFF",
+          "agencyId": "BKK_BKK",
+          "iconDisplayType": "BOX",
+          "iconDisplayText": "154",
+          "bikesAllowed": false,
+          "style": {
+            "color": "009EE3",
+            "icon": {
+              "type": "BOX",
+              "text": "154",
+              "textColor": "FFFFFF"
+            },
+            "vehicleIcon": {
+              "name": "bus",
+              "color": "009EE3",
+              "secondaryColor": "FFFFFF"
+            },
+            "groupId": 5
+          },
+          "sortOrder": 224
+        },
+        "BKK_1500": {
+          "id": "BKK_1500",
+          "shortName": "150",
+          "description": "Budat\u00e9t\u00e9ny v\u00e1. (Campona) | \u00dajbuda-k\u00f6zpont M",
+          "type": "BUS",
+          "url": "https://bkk.hu/menetrendek/#150",
+          "color": "009EE3",
+          "textColor": "FFFFFF",
+          "agencyId": "BKK_BKK",
+          "iconDisplayType": "BOX",
+          "iconDisplayText": "150",
+          "bikesAllowed": false,
+          "style": {
+            "color": "009EE3",
+            "icon": {
+              "type": "BOX",
+              "text": "150",
+              "textColor": "FFFFFF"
+            },
+            "vehicleIcon": {
+              "name": "bus",
+              "color": "009EE3",
+              "secondaryColor": "FFFFFF"
+            },
+            "groupId": 5
+          },
+          "sortOrder": 219
+        },
+        "BKK_1502": {
+          "id": "BKK_1502",
+          "shortName": "150B",
+          "description": "Budat\u00e9t\u00e9ny v\u00e1. (Campona) | \u00dajbuda-k\u00f6zpont M",
+          "type": "BUS",
+          "url": "https://bkk.hu/menetrendek/#150B",
+          "color": "009EE3",
+          "textColor": "FFFFFF",
+          "agencyId": "BKK_BKK",
+          "iconDisplayType": "BOX",
+          "iconDisplayText": "150B",
+          "bikesAllowed": false,
+          "style": {
+            "color": "009EE3",
+            "icon": {
+              "type": "BOX",
+              "text": "150B",
+              "textColor": "FFFFFF"
+            },
+            "vehicleIcon": {
+              "name": "bus",
+              "color": "009EE3",
+              "secondaryColor": "FFFFFF"
+            },
+            "groupId": 5
+          },
+          "sortOrder": 220
+        }
+      },
+      "stops": {
+        "BKK_CSF02262": {
+          "id": "BKK_CSF02262",
+          "vertex": "BKK:BKK_CSF02262",
+          "lat": 47.475498,
+          "lon": 19.030116,
+          "name": "Holl\u00f3k\u0151 utca",
+          "localityName": "1113",
+          "code": "CSF02262",
+          "direction": "",
+          "description": "}rw`HuycsBGUAYBYJSNKNCPFJN~@pBFV@XCXKROJOBQGMQ}@qB",
+          "locationType": 1,
+          "locationSubType": "stop-area",
+          "wheelchairBoarding": false,
+          "routeIds": [
+            "BKK_0530",
+            "BKK_1500",
+            "BKK_1502",
+            "BKK_1540"
+          ],
+          "stopColorType": "BUS",
+          "style": {
+            "colors": [
+              "009EE3"
+            ]
+          }
+        },
+        "BKK_F02262": {
+          "id": "BKK_F02262",
+          "vertex": "BKK:BKK_F02262",
+          "lat": 47.475655,
+          "lon": 19.030401,
+          "name": "Holl\u00f3k\u0151 utca",
+          "localityName": "1113",
+          "code": "F02262",
+          "direction": "-107",
+          "description": "5797",
+          "locationType": 0,
+          "parentStationId": "BKK_CSF02262",
+          "type": "BUS",
+          "wheelchairBoarding": true,
+          "routeIds": [
+            "BKK_0530",
+            "BKK_1500",
+            "BKK_1502",
+            "BKK_1540"
+          ],
+          "stopColorType": "BUS",
+          "style": {
+            "colors": [
+              "009EE3"
+            ]
+          }
+        }
+      },
+      "trips": {
+        "BKK_D1064716888": {
+          "id": "BKK_D1064716888",
+          "routeId": "BKK_0530",
+          "shapeId": "BKK_D1064716888",
+          "blockId": "D10647_0530_33_25",
+          "tripHeadsign": "Mindszenty J. b\u00edboros t\u00e9r",
+          "serviceId": "BKK_D10647AHPHM-0021",
+          "directionId": "0",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        },
+        "BKK_D10190763": {
+          "id": "BKK_D10190763",
+          "routeId": "BKK_1500",
+          "shapeId": "BKK_D10190763",
+          "blockId": "D10190_1500_3_15",
+          "tripHeadsign": "Budat\u00e9t\u00e9ny v\u00e1. (Campona)",
+          "serviceId": "BKK_D10190AHPKYM-011",
+          "directionId": "0",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        },
+        "BKK_D104545252": {
+          "id": "BKK_D104545252",
+          "routeId": "BKK_1540",
+          "shapeId": "BKK_D104545252",
+          "blockId": "D10454_1530_45_13",
+          "tripHeadsign": "Gazdagr\u00e9ti t\u00e9r",
+          "serviceId": "BKK_D10454AHPHM-0021",
+          "directionId": "1",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        },
+        "BKK_D1064715951": {
+          "id": "BKK_D1064715951",
+          "routeId": "BKK_0530",
+          "shapeId": "BKK_D1064715951",
+          "blockId": "D10647_0530_21_17",
+          "tripHeadsign": "Mindszenty J. b\u00edboros t\u00e9r",
+          "serviceId": "BKK_D10647AHPHM-0021",
+          "directionId": "0",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        },
+        "BKK_D1064715896": {
+          "id": "BKK_D1064715896",
+          "routeId": "BKK_0530",
+          "shapeId": "BKK_D1064715896",
+          "blockId": "D10647_0530_32_27",
+          "tripHeadsign": "Mindszenty J. b\u00edboros t\u00e9r",
+          "serviceId": "BKK_D10647AHPHM-0021",
+          "directionId": "0",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        },
+        "BKK_D10190758": {
+          "id": "BKK_D10190758",
+          "routeId": "BKK_1500",
+          "shapeId": "BKK_D10190758",
+          "blockId": "D10190_1500_2_14",
+          "tripHeadsign": "Budat\u00e9t\u00e9ny v\u00e1. (Campona)",
+          "serviceId": "BKK_D10190AHPKYM-011",
+          "directionId": "0",
+          "bikesAllowed": false,
+          "wheelchairAccessible": true,
+          "firstDoorBoarding": "ALWAYS"
+        }
+      },
+      "alerts": {}
+    },
+    "class": "entryWithReferences"
+  }
+}
