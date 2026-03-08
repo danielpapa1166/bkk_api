@@ -3,3 +3,9 @@ __pycache__
 *.0
 .vscode
 data
+
+cpp/build
+cpp/_deps
+cpp/CMakeFiles
+cpp/CMakeCache.txt
+cpp/bkk_api
