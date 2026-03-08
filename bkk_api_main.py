@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from bkk_client import BKKClient
 from bkk_response_parser import parse_arrivals_response, Arrival
 from bkk_station_list import stations
+import json
 
 def print_section(title: str):
     """Print a formatted section header"""
@@ -38,6 +39,8 @@ def main(station_name = None):
                 return
 
         server_response = client.get_arrivals_for_stop(stop_id)
+
+        print(json.dumps(server_response, indent=2))
 
         arrivals = parse_arrivals_response(server_response)
 
