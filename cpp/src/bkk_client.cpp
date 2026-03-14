@@ -7,7 +7,9 @@
 
 // Callback for CURL to write response data
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
-    printf("Curl write callback called with size: %d bytes\n", (size * nmemb));
+#ifdef BKK_API_VERBOSE_ON
+    printf("Curl write callback called with size: %ld bytes\n", (size * nmemb));
+#endif
     userp->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
@@ -50,7 +52,9 @@ nlohmann::json BKKClient::_make_request(
     std::string readBuffer;
     
     try {
+#ifdef BKK_API_VERBOSE_ON
         std::cout << "Making request to: " << url << std::endl;
+#endif
         
         // set request options: 
         curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
