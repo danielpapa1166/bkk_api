@@ -4,6 +4,8 @@ project(bkk_api_cpp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(BKK_API_VERBOSE_ON "Enable verbose logging in bkk_api" OFF)
+
 # Find required packages
 find_package(CURL REQUIRED)
 
@@ -30,6 +32,10 @@ set(LIBRARY_SOURCES
 # Create shared library
 add_library(bkk_api_shared SHARED ${LIBRARY_SOURCES})
 
+if(BKK_API_VERBOSE_ON)
+    target_compile_definitions(bkk_api_shared PRIVATE BKK_API_VERBOSE_ON)
+endif()
+
 # Link libraries to shared library
 target_link_libraries(bkk_api_shared PUBLIC CURL::libcurl nlohmann_json::nlohmann_json)
 
@@ -44,6 +50,10 @@ add_executable(bkk_api
     src/main.cpp
 )
 target_link_libraries(bkk_api PRIVATE bkk_api_shared)
+
+if(BKK_API_VERBOSE_ON)
+    target_compile_definitions(bkk_api PRIVATE BKK_API_VERBOSE_ON)
+endif()
 
 # Compiler flags for better warnings
 if(MSVC)
