@@ -3,6 +3,7 @@ py/__pycache__
 py/.env
 .env 
 *.0
+*.so
 .vscode
 data
 
