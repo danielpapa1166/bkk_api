@@ -1,63 +1,32 @@
-cmake_minimum_required(VERSION 3.10)
-project(bkk_api_cpp)
+cmake_minimum_required(VERSION 3.16)
+project(bkk_api_uds_service LANGUAGES C CXX)
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BKK_API_VERBOSE_ON "Enable verbose logging in bkk_api" OFF)
 
-# Find required packages
+# Keep outputs in predictable locations for easier integration/testing.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 find_package(CURL REQUIRED)
 
-# nlohmann_json - try to find it, otherwise fetch
 find_package(nlohmann_json 3.2.0 QUIET)
 if(NOT nlohmann_json_FOUND)
     include(FetchContent)
-    FetchContent_Declare(nlohmann_json 
-        URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-# Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-# Source files for the library 
-set(LIBRARY_SOURCES
-    src/bkk_api.cpp
-    src/bkk_client.cpp
-    src/bkk_response_parser.cpp
-    src/bkk_station_list.cpp
-)
-
-# Create shared library
-add_library(bkk_api_shared SHARED ${LIBRARY_SOURCES})
-
-if(BKK_API_VERBOSE_ON)
-    target_compile_definitions(bkk_api_shared PRIVATE BKK_API_VERBOSE_ON)
-endif()
-
-# Link libraries to shared library
-target_link_libraries(bkk_api_shared PUBLIC CURL::libcurl nlohmann_json::nlohmann_json)
-
-# Set public header files
-target_include_directories(bkk_api_shared PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-
-# Add executable (optional - uses the shared library)
-add_executable(bkk_api 
-    src/main.cpp
-)
-target_link_libraries(bkk_api PRIVATE bkk_api_shared)
-
-if(BKK_API_VERBOSE_ON)
-    target_compile_definitions(bkk_api PRIVATE BKK_API_VERBOSE_ON)
-endif()
-
-# Compiler flags for better warnings
-if(MSVC)
-    target_compile_options(bkk_api PRIVATE /W4)
-else()
-    target_compile_options(bkk_api PRIVATE -Wall -Wextra -pedantic)
-endif()
+add_subdirectory(bkk_uds_server)
+add_subdirectory(bkk_uds_client)
+add_subdirectory(test)
