@@ -95,10 +95,10 @@ int main(int argc, char* argv[]) {
     }
   }
 
-    close(server_fd); 
-    unlink(BKK_UDS_SOCKET_PATH); 
-    return 0; 
-  }
+  close(server_fd); 
+  unlink(BKK_UDS_SOCKET_PATH); 
+  return 0; 
+}
 
 
 static void handle_client(int client_fd) {
@@ -108,12 +108,18 @@ static void handle_client(int client_fd) {
   if (n != sizeof(request)) {
     printf("Failed to receive data from client\n");
     close(client_fd);
-  } 
+    return;
+  }
 
   printf("Received request for stop_id: %s\n", request.stop_id);
 
 
   bkk_uds_response_t response {};
+  int foo = 42; 
+  snprintf(
+    response.arrivals[0].line_id, 
+    sizeof(response.arrivals[0].line_id), 
+    "Resp%d", foo);
 
   ssize_t sent_size = send(client_fd, &response, sizeof(response), 0);
   if (sent_size != sizeof(response)) {

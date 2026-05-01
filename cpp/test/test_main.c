@@ -6,7 +6,7 @@ int main() {
   const int res = send_bkk_uds_query("1234", &response); 
   if(res == 0) {
     printf("Received response for stop_id 1234:\n");
-    printf("Stop ID: %s\n", response.dummy_data);
+    printf("Stop ID: %s\n", response.arrivals[0].line_id);
   } else {
     printf("Failed to get response for stop_id 1234\n");
   }

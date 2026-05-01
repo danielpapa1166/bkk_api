@@ -1,5 +1,4 @@
 set(BKK_UDS_SERVER_SOURCES
-    arrival.cpp
     bkk_api.cpp
     bkk_client.cpp
     bkk_response_parser.cpp

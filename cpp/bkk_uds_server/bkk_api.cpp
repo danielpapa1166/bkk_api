@@ -4,9 +4,6 @@
 #include "bkk_station_list.hpp"
 #include <iostream>
 
-// this is a wrapper class that for higher level API calls 
-// to be compiled into a .so 
-
 
 static std::string get_env_var(const std::string& key) {
     const char* val = std::getenv(key.c_str());
@@ -46,7 +43,7 @@ void BkkApi::display_arrivals(const std::vector<Arrival>& arrivals) const {
     
     std::cout << "Upcoming arrivals:" << std::endl;
     for (int i = 0; i < arrivals.size(); i++) {
-        std::cout << "Line: " << arrivals[i].line 
+        std::cout << "Line: " << arrivals[i].line_id 
                   << ", Destination: " << arrivals[i].destination 
                   << ", Departure Time: " << arrivals[i].departure_time 
                   << ", Departs in: " << arrivals[i].departs_in_min << " min" 

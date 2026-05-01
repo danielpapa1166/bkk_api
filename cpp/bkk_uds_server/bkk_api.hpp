@@ -2,7 +2,7 @@
 #define BKK_API_HPP
 
 #include "bkk_client.hpp"
-#include "arrival.hpp"
+#include "bkk_api_arrival.h"
 #include <vector>
 #include <string>
 

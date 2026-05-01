@@ -117,7 +117,16 @@ std::vector<Arrival> parse_arrivals_response(const nlohmann::json& response) {
                 }
                 
                 // Create and add arrival
-                Arrival arrival{line, destination, departure_time_str, departs_in_min, departure_time};
+                Arrival arrival {};
+                strncpy(arrival.line_id, 
+                    line.c_str(), sizeof(arrival.line_id) - 1);
+                strncpy(arrival.destination, 
+                    destination.c_str(), sizeof(arrival.destination) - 1);
+                strncpy(arrival.departure_time, 
+                    departure_time_str.c_str(), sizeof(arrival.departure_time) - 1);
+                arrival.departs_in_min = departs_in_min;
+                arrival.timestamp = departure_time;
+                
                 arrivals.push_back(arrival);
                 
             } catch (const std::exception& e) {
