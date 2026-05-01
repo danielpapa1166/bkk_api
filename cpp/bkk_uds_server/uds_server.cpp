@@ -93,12 +93,12 @@ int main(int argc, char* argv[]) {
 
       }
     }
+  }
 
     close(server_fd); 
     unlink(BKK_UDS_SOCKET_PATH); 
     return 0; 
   }
-}
 
 
 static void handle_client(int client_fd) {
