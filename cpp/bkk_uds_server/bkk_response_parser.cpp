@@ -1,14 +1,19 @@
 #include "bkk_response_parser.hpp"
+#include <nlohmann/json.hpp>
+#include <cmath>
+#include <cstring>
 #include <iostream>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
 
+using json = nlohmann::json;
+
 // parse arrival response from BKK Server 
 
 static std::string find_route_id_for_trip(
     const std::string& trip_id, 
-    const nlohmann::json& references) {
+    const json& references) {
     
     // trips reference contains trip details    
     try {
@@ -28,7 +33,7 @@ static std::string find_route_id_for_trip(
 
 static std::string find_route_name_for_route_id(
     const std::string& route_id, 
-    const nlohmann::json& references) {
+    const json& references) {
     
     // the routes reference contins route info 
     try {
@@ -46,8 +51,16 @@ static std::string find_route_name_for_route_id(
     return "";
 }
 
-std::vector<Arrival> parse_arrivals_response(const nlohmann::json& response) {
+std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
     std::vector<Arrival> arrivals;
+
+    json response;
+    try {
+        response = json::parse(response_body);
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to parse response JSON: " << e.what() << std::endl;
+        return arrivals;
+    }
     
     // Check if response has required data structure
     if (!response.contains("data") || !response["data"].contains("entry")) {
@@ -63,15 +76,15 @@ std::vector<Arrival> parse_arrivals_response(const nlohmann::json& response) {
 
         // stop info: 
         const auto& stop_times = entry.contains("stopTimes") ? 
-            entry["stopTimes"] : nlohmann::json::array();
+            entry["stopTimes"] : json::array();
 
         // references contains extra info about trip id and route details 
         const auto& references = response["data"].contains("references") ? 
-            response["data"]["references"] : nlohmann::json::object();
+            response["data"]["references"] : json::object();
         
         // Get trips reference
         const auto& trips = references.contains("trips") ? 
-            references["trips"] : nlohmann::json::object();
+            references["trips"] : json::object();
         
         // Parse each stop time
         for (const auto& stop_time : stop_times) {
