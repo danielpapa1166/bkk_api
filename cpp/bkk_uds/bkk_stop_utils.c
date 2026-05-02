@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
 int get_stop_list_size(void) {
+  // test function 
   return sizeof(bkk_stop_list) / sizeof(bkk_stop_list[0]);
 }
 
@@ -43,9 +46,12 @@ bkk_stop_stat_t find_stop_by_index(size_t index, bkk_stop_t * stop_out) {
 }
 
 
+
+// the caller is responsible for freeing the allocated memory for indices_out
 bkk_stop_stat_t find_stops_by_name_substring(
     const char * substring, size_t ** indices_out, size_t * count_out) {
 
+  // double for loop for allocation
   if(indices_out == NULL || count_out == NULL) {
     return BKK_STOP_NOT_FOUND;
   }
@@ -65,7 +71,7 @@ bkk_stop_stat_t find_stops_by_name_substring(
     return BKK_STOP_NOT_FOUND;
   }
 
-  // alloc memory: 
+  // alloc memory (to be free'd by the caller)
   size_t * indices = (size_t *)malloc(count * sizeof(size_t));
   if(indices == NULL) {
     *indices_out = NULL;
