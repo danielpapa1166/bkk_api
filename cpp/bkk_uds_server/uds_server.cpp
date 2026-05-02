@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include "bkk_api.hpp"
 #include "bkk_uds_protocol.h"
+#include "bkk_cache.hpp"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/epoll.h>
@@ -14,7 +15,9 @@ static const int MAX_EVENTS = 10;
 
 
 static int init_server(int * const event_fd, int * const server_fd);
-static void handle_client(int client_fd, BkkApi & bkk_api); 
+static void handle_client(int client_fd, BkkApi & bkk_api, UdsCache & cache); 
+static void fresh_fetch_and_update_cache(
+  const std::string & stop_id, BkkApi & bkk_api, UdsCache & cache, std::vector<Arrival> * arrivals_out);
 
 
 int main(int argc, char* argv[]) {
@@ -28,7 +31,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  
+  UdsCache cache;
   epoll_event events[MAX_EVENTS];
 
   while (1) {
@@ -51,7 +54,7 @@ int main(int argc, char* argv[]) {
           continue;
         }
 
-        std::thread(handle_client, client_fd, std::ref(bkk_api)).detach();
+        std::thread(handle_client, client_fd, std::ref(bkk_api), std::ref(cache)).detach();
 
       }
     }
@@ -116,7 +119,7 @@ static int init_server(int * const event_fd, int * const server_fd) {
   return 0; 
 }
 
-static void handle_client(int client_fd, BkkApi & bkk_api) {
+static void handle_client(int client_fd, BkkApi & bkk_api, UdsCache & cache) {
   printf("Handling client on fd %d\n", client_fd);
   bkk_uds_request_t request {};
   ssize_t n = recv(client_fd, &request, sizeof(request), 0);
@@ -128,8 +131,39 @@ static void handle_client(int client_fd, BkkApi & bkk_api) {
 
   printf("Received request for stop_id: %s\n", request.stop_id);
 
-  std::vector<Arrival> arrivals = bkk_api.get_arrivals_for_station(
-    request.stop_id); 
+  // check cache first:
+  std::vector<Arrival> arrivals; 
+  cache_entry_t cache_entry;
+  cache_state_t cache_state = cache.get_element(request.stop_id, &cache_entry);
+  if (cache_state == CACHE_HIT_FRESH) {
+    arrivals = cache_entry.arrivals;
+    printf("Cache hit (fresh) for stop_id: %s\n", request.stop_id);
+  } 
+  else if (cache_state == CACHE_HIT_STALE) {
+    printf("Cache hit (stale) for stop_id: %s\n", request.stop_id);
+
+    // fetch fresh data in the background 
+    std::thread([&bkk_api, &cache, request](){
+      std::vector<Arrival> fresh_arrivals;
+      fresh_fetch_and_update_cache(
+        request.stop_id, 
+        bkk_api, 
+        cache, 
+        &fresh_arrivals);
+    }).detach();
+
+    arrivals = cache_entry.arrivals;
+  }
+  else {
+    printf("Cache miss for stop_id: %s\n", request.stop_id);
+    fresh_fetch_and_update_cache(
+      request.stop_id, 
+      bkk_api, 
+      cache, 
+      &arrivals); 
+  }
+
+
   bkk_api.display_arrivals(arrivals); 
 
   int num_arrivals = std::min((int)arrivals.size(), BKK_UDS_MAX_ARRIVALS);
@@ -150,4 +184,15 @@ static void handle_client(int client_fd, BkkApi & bkk_api) {
 
   close(client_fd);
 
+}
+
+
+static void fresh_fetch_and_update_cache(
+    const std::string & stop_id, BkkApi & bkk_api, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
+  *arrivals_out = bkk_api.get_arrivals_for_station(stop_id); 
+  cache_entry_t new_cache_entry {
+    *arrivals_out, 
+    std::chrono::steady_clock::now()
+  };
+  cache.put_element(stop_id, new_cache_entry);
 }

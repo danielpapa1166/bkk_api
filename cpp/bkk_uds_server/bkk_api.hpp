@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+// TODO: review the API: is it thread safe? 
+
 class BkkApi {
 
 private: 

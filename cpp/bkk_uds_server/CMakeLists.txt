@@ -4,6 +4,7 @@ set(BKK_UDS_SERVER_SOURCES
     bkk_response_parser.cpp
     bkk_station_list.cpp
     uds_server.cpp
+    bkk_cache.cpp
 )
 
 add_executable(bkk_uds_server ${BKK_UDS_SERVER_SOURCES})
