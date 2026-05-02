@@ -1,6 +1,10 @@
 #ifndef BKK_API_ARRIVAL_H
 #define BKK_API_ARRIVAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ARRIVAL_LINE_MAX_LEN                 8
 #define ARRIVAL_DESTINATION_MAX_LEN          64
 #define ARRIVAL_DEPARTURE_TIME_MAX_LEN       16
@@ -13,5 +17,8 @@ typedef struct {
   long long timestamp;
 } Arrival;
 
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // BKK_API_ARRIVAL_H
