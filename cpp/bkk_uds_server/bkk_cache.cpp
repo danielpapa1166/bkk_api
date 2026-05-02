@@ -24,7 +24,7 @@ void UdsCache::put_element(
   // Clean up stale entries after adding a new one
   remove_stale_entries();
 
-  printf("Cache size in bytes: %lu\n", cache.size() * sizeof(cache_entry_t));
+  printf("Cache elements: %lu\n", cache.size());
 }
 
 
