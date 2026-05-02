@@ -5,6 +5,7 @@
 
 #define BKK_UDS_SOCKET_PATH "/tmp/bkk_uds.sock"
 #define BKK_UDS_MAX_STOP_ID_LEN 64
+#define BKK_UDS_MAX_ARRIVALS 16
 
 
 typedef struct {
@@ -12,7 +13,8 @@ typedef struct {
 } bkk_uds_request_t;
 
 typedef struct {
-  Arrival arrivals[16]; 
+  int number_of_arrivals;
+  Arrival arrivals[BKK_UDS_MAX_ARRIVALS]; 
 } bkk_uds_response_t;
 
 
