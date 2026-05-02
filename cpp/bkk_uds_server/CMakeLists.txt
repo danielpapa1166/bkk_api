@@ -3,6 +3,7 @@ set(BKK_UDS_SERVER_SOURCES
     bkk_response_parser.cpp
     uds_server.cpp
     bkk_cache.cpp
+    ../submodules/cJSON/cJSON.c
 )
 
 add_executable(bkk_uds_server ${BKK_UDS_SERVER_SOURCES})
@@ -11,13 +12,13 @@ target_include_directories(bkk_uds_server
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../bkk_uds
+    ${CMAKE_CURRENT_SOURCE_DIR}/../submodules/cJSON
 )
 
 target_link_libraries(bkk_uds_server
     PRIVATE
         CURL::libcurl
-        nlohmann_json::nlohmann_json
-    rbuflogd_producer
+        rbuflogd_producer
         bkk_stop_utils
 )
 
