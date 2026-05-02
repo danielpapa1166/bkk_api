@@ -1,9 +1,12 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+
 #include "bkk_api.hpp"
 #include "bkk_uds_protocol.h"
 #include "bkk_cache.hpp"
+#include "bkk_stop_utils.h"
+
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/epoll.h>
@@ -23,6 +26,24 @@ static void fresh_fetch_and_update_cache(
 int main(int argc, char* argv[]) {
   (void) argc;
   (void) argv;
+  printf("Stop list size: %d\n", get_stop_list_size());
+
+  size_t * indices = NULL;
+  size_t count = 0;
+  const char * substring = "Hollókő";
+  bkk_stop_stat_t stat = find_stops_by_name_substring(
+    substring, 
+    &indices, 
+    &count);
+
+  if(stat == BKK_STOP_FOUND) {
+    printf("Found %zu stops matching '%s':\n", count, substring);
+    display_stop_list(indices, count);
+    free(indices);
+  } 
+  else {
+    printf("No stops found matching '%s'\n", substring);
+  }
 
   BkkApi bkk_api;
 

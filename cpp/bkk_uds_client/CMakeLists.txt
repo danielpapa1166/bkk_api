@@ -1,4 +1,5 @@
 add_library(bkk_uds_client SHARED bkk_uds_client.c)
+target_link_libraries(bkk_uds_client PRIVATE bkk_stop_utils)
 
 target_include_directories(bkk_uds_client
     PUBLIC

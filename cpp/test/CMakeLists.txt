@@ -8,6 +8,7 @@ target_include_directories(bkk_uds_test
 target_link_libraries(bkk_uds_test
     PRIVATE
         bkk_uds_client
+    bkk_stop_utils
 )
 
 if(UNIX AND NOT APPLE)

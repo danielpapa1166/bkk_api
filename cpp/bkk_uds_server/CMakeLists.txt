@@ -19,6 +19,7 @@ target_link_libraries(bkk_uds_server
     PRIVATE
         CURL::libcurl
         nlohmann_json::nlohmann_json
+        bkk_stop_utils
 )
 
 if(BKK_API_VERBOSE_ON)
