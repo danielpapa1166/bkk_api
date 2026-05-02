@@ -30,6 +30,9 @@ endif()
 add_library(bkk_stop_utils STATIC bkk_uds/bkk_stop_utils.c)
 target_include_directories(bkk_stop_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/bkk_uds)
 
+# Import rbuflogd targets without enabling its daemon/test executables in default ALL builds.
+add_subdirectory(submodules/rbuflogd EXCLUDE_FROM_ALL)
+
 add_subdirectory(bkk_uds_server)
 add_subdirectory(bkk_uds_client)
 add_subdirectory(test)

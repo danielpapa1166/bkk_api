@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-// TODO: review the API: is it thread safe? 
-
 namespace bkk_api {
 
 std::string get_env_var(const std::string& key);

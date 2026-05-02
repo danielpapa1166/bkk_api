@@ -17,6 +17,7 @@ target_link_libraries(bkk_uds_server
     PRIVATE
         CURL::libcurl
         nlohmann_json::nlohmann_json
+    rbuflogd_producer
         bkk_stop_utils
 )
 
