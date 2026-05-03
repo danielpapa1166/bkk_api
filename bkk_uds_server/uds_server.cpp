@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <cstdlib>
 #include <fstream>
@@ -20,6 +19,12 @@
 #include <thread>
 #include <unistd.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define BKK_MAYBE_UNUSED __attribute__((unused))
+#else
+#define BKK_MAYBE_UNUSED
+#endif
+
 
 static const int MAX_EVENTS = 10;
 static std::string bkk_api_key; 
@@ -34,7 +39,10 @@ static void handle_client(int client_fd, UdsCache & cache);
 static void fresh_fetch_and_update_cache(
   const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
 static void log_debug(const std::string & category, const std::string & message);
-static void log_info(const std::string & category, const std::string & message); 
+static void BKK_MAYBE_UNUSED log_info(
+  const std::string & category, const std::string & message);
+static void BKK_MAYBE_UNUSED log_warn(
+  const std::string & category, const std::string & message);
 static void log_error(const std::string & category, const std::string & message);
 
 
@@ -413,7 +421,8 @@ static void log_debug(const std::string & category, const std::string & message)
     logger, RBUF_LOG_LEVEL_DEBUG, 
     category.c_str(), message.c_str()); 
 }
-static void log_info(const std::string & category, const std::string & message) {
+static void BKK_MAYBE_UNUSED log_info(
+    const std::string & category, const std::string & message) {
   if(logger == nullptr) {
     return; 
   }
@@ -421,7 +430,8 @@ static void log_info(const std::string & category, const std::string & message) 
     logger, RBUF_LOG_LEVEL_INFO, 
     category.c_str(), message.c_str()); 
 }
-static void log_warn(const std::string & category, const std::string & message) {
+static void BKK_MAYBE_UNUSED log_warn(
+    const std::string & category, const std::string & message) {
   if(logger == nullptr) {
     return; 
   }
