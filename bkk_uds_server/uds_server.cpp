@@ -370,8 +370,19 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
 static void fresh_fetch_and_update_cache(
     const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
-  *arrivals_out = bkk_api::get_arrivals_for_station(
-    stop_id, bkk_api_key); 
+
+  std::vector<Arrival> fresh_arrivals;
+  bkk_api::ErrorCode fetch_status = bkk_api::get_arrivals_for_station(
+    stop_id, bkk_api_key, &fresh_arrivals);
+  if (fetch_status != bkk_api::ErrorCode::Ok) {
+    char log_msg[256];
+    snprintf(log_msg, sizeof(log_msg),
+      "Failed to fetch arrivals for stop_id: %s, error code: %d",
+      stop_id.c_str(), (int)fetch_status);
+    log_error("Fetch", log_msg); 
+    return; 
+  }
+  *arrivals_out = fresh_arrivals;
 
   cache_entry_t new_cache_entry {
     *arrivals_out, 

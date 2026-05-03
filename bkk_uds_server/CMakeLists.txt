@@ -12,7 +12,7 @@ target_include_directories(bkk_uds_server
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../bkk_uds
-    ${CMAKE_CURRENT_SOURCE_DIR}/../submodules/cJSON
+        ${CMAKE_CURRENT_SOURCE_DIR}/../submodules
 )
 
 target_link_libraries(bkk_uds_server

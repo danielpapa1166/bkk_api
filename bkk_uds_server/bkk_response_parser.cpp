@@ -1,5 +1,5 @@
 #include "bkk_response_parser.hpp"
-#include "cJSON.h"
+#include "cJSON/cJSON.h"
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -17,17 +17,20 @@ static std::string find_route_id_for_trip(
     return "";
   }
 
-  cJSON* trips = cJSON_GetObjectItemCaseSensitive(references, "trips");
+  cJSON* trips = cJSON_GetObjectItemCaseSensitive(
+    references, "trips");
   if (!cJSON_IsObject(trips)) {
     return "";
   }
 
-  cJSON* trip = cJSON_GetObjectItemCaseSensitive(trips, trip_id.c_str());
+  cJSON* trip = cJSON_GetObjectItemCaseSensitive(
+    trips, trip_id.c_str());
   if (!cJSON_IsObject(trip)) {
     return "";
   }
 
-  cJSON* route_id = cJSON_GetObjectItemCaseSensitive(trip, "routeId");
+  cJSON* route_id = cJSON_GetObjectItemCaseSensitive(
+    trip, "routeId");
   if (cJSON_IsString(route_id) && (route_id->valuestring != nullptr)) {
     return route_id->valuestring;
   }
@@ -61,8 +64,16 @@ static std::string find_route_name_for_route_id(
   return "";
 }
 
-std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
-  std::vector<Arrival> arrivals;
+ArrivalsParseStatus parse_arrivals_response(
+  const std::string& response_body,
+  std::vector<Arrival>* const output_arrivals) {
+
+  if (output_arrivals == nullptr) {
+    return ArrivalsParseStatus::NoValidStopTimes;
+  }
+
+  output_arrivals->clear();
+  int skipped_stop_times = 0;
 
   cJSON* response = cJSON_Parse(response_body.c_str());
   if (response == nullptr) {
@@ -72,23 +83,28 @@ std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
       std::cerr << " near: " << error_ptr;
     }
     std::cerr << std::endl;
-    return arrivals;
+    return ArrivalsParseStatus::InvalidJson;
   }
 
   if (!cJSON_IsObject(response)) {
     std::cerr << "Response root is not a JSON object" << std::endl;
     cJSON_Delete(response);
-    return arrivals;
+    return ArrivalsParseStatus::RootNotObject;
   }
 
   cJSON* data = cJSON_GetObjectItemCaseSensitive(response, "data");
+  if (!cJSON_IsObject(data)) {
+    cJSON_Delete(response);
+    return ArrivalsParseStatus::MissingDataObject;
+  }
+
   cJSON* entry = cJSON_IsObject(data)
     ? cJSON_GetObjectItemCaseSensitive(data, "entry")
     : nullptr;
   if (!cJSON_IsObject(entry)) {
     std::cout << "No schedule info for the given stop" << std::endl;
     cJSON_Delete(response);
-    return arrivals;
+    return ArrivalsParseStatus::MissingEntryObject;
   }
 
   // Get API time in seconds (convert from milliseconds)
@@ -100,7 +116,7 @@ std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
   cJSON* stop_times = cJSON_GetObjectItemCaseSensitive(entry, "stopTimes");
   if (!cJSON_IsArray(stop_times)) {
     cJSON_Delete(response);
-    return arrivals;
+    return ArrivalsParseStatus::StopTimesNotArray;
   }
 
   cJSON* references = cJSON_IsObject(data)
@@ -111,9 +127,15 @@ std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
     : nullptr;
 
   const int stop_time_count = cJSON_GetArraySize(stop_times);
+  if (stop_time_count == 0) {
+    cJSON_Delete(response);
+    return ArrivalsParseStatus::EmptyStopTimes;
+  }
+
   for (int i = 0; i < stop_time_count; ++i) {
     cJSON* stop_time = cJSON_GetArrayItem(stop_times, i);
     if (!cJSON_IsObject(stop_time)) {
+      skipped_stop_times++;
       continue;
     }
 
@@ -140,6 +162,10 @@ std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
     } 
     else if (cJSON_IsNumber(arrival_time)) {
       departure_time = static_cast<long long>(cJSON_GetNumberValue(arrival_time));
+    }
+    else {
+      skipped_stop_times++;
+      continue;
     }
 
     // Calculate minutes until departure
@@ -184,9 +210,17 @@ std::vector<Arrival> parse_arrivals_response(const std::string& response_body) {
     arrival.departs_in_min = departs_in_min;
     arrival.timestamp = departure_time;
 
-    arrivals.push_back(arrival);
+    output_arrivals->push_back(arrival);
   }
 
   cJSON_Delete(response);
-  return arrivals;
+
+  if (output_arrivals->empty()) {
+    return ArrivalsParseStatus::NoValidStopTimes;
+  }
+  if (skipped_stop_times > 0) {
+    return ArrivalsParseStatus::SuccessWithWarnings;
+  }
+
+  return ArrivalsParseStatus::Success;
 }
