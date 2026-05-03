@@ -6,3 +6,11 @@
 	path = cpp/submodules/rbuflogd
 	url = git@github.com:danielpapa1166/rbuflogd.git
 	branch = main
+[submodule "submodules/rbuflogd"]
+	path = submodules/rbuflogd
+	url = git@github.com:danielpapa1166/rbuflogd.git
+	branch = main
+[submodule "submodules/cJSON"]
+	path = submodules/cJSON
+	url = git@github.com:DaveGamble/cJSON.git
+	branch = master
