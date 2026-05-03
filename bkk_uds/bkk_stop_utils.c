@@ -12,6 +12,10 @@ int get_stop_list_size(void) {
 }
 
 bkk_stop_stat_t find_stop_by_id(const char * stop_id, bkk_stop_t * stop_out) {
+  if(stop_id == NULL) {
+    return BKK_STOP_NOT_FOUND;
+  }
+
   for(size_t i = 0; i < BKK_STOP_COUNT; i++) {
     if(strcmp(bkk_stop_list[i].stop_id, stop_id) == 0) {
       if(stop_out != NULL) {
@@ -24,6 +28,10 @@ bkk_stop_stat_t find_stop_by_id(const char * stop_id, bkk_stop_t * stop_out) {
 }
 
 bkk_stop_stat_t find_stop_by_name(const char * stop_name, bkk_stop_t * stop_out) {
+  if(stop_name == NULL) {
+    return BKK_STOP_NOT_FOUND;
+  }
+
   for(size_t i = 0; i < BKK_STOP_COUNT; i++) {
     if(strcmp(bkk_stop_list[i].stop_name, stop_name) == 0) {
       if(stop_out != NULL) {
@@ -52,7 +60,13 @@ bkk_stop_stat_t find_stops_by_name_substring(
     const char * substring, size_t ** indices_out, size_t * count_out) {
 
   // double for loop for allocation
-  if(indices_out == NULL || count_out == NULL) {
+  if(substring == NULL || indices_out == NULL || count_out == NULL) {
+    if(indices_out != NULL) {
+      *indices_out = NULL;
+    }
+    if(count_out != NULL) {
+      *count_out = 0;
+    }
     return BKK_STOP_NOT_FOUND;
   }
 
