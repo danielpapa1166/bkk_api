@@ -10,8 +10,8 @@
 #include "bkk_api.hpp"
 #include "bkk_uds_protocol.h"
 #include "bkk_cache.hpp"
-#include "bkk_stop_utils.h"
 
+#include <curl/curl.h>
 #include <rbuflogd/producer.h>
 
 #include <sys/socket.h>
@@ -99,13 +99,25 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  const CURLcode curl_init_status = curl_global_init(CURL_GLOBAL_DEFAULT);
+  if (curl_init_status != CURLE_OK) {
+    printf("Failed to initialize libcurl: %s\n", curl_easy_strerror(curl_init_status));
+    log_error("Init", "Failed to initialize libcurl");
+    return 1;
+  }
+
+  const auto cleanup_and_return = [](int code) {
+    curl_global_cleanup();
+    return code;
+  };
+
   if(!api_key_file_path.empty()) {
     try {
       bkk_api_key = read_api_key_from_file(api_key_file_path);
     } catch (const std::exception& e) {
       printf("Failed to read API key from file: %s\n", e.what());
       log_error("Init", "Failed to read API key from file");
-      return 1;
+      return cleanup_and_return(1);
     }
   } else {
     bkk_api_key = bkk_api::get_env_var("BKK_API_KEY");
@@ -114,7 +126,7 @@ int main(int argc, char* argv[]) {
   if (bkk_api_key.empty()) {
     printf("API key is required (set BKK_API_KEY or pass -k <key_file_path>)\n");
     log_error("Init", "API key not provided");
-    return 1;
+    return cleanup_and_return(1);
   }
 
   cache_config_t cache_config {
@@ -126,7 +138,7 @@ int main(int argc, char* argv[]) {
   int event_fd, server_fd;
   if(init_server(&event_fd, &server_fd) != 0) {
     log_error("Init", "Failed to initialize server");
-    return 1;
+    return cleanup_and_return(1);
   }
 
   UdsCache cache(&cache_config);
@@ -143,7 +155,7 @@ int main(int argc, char* argv[]) {
     if(num_events < 0) {
       printf("Failed to wait for events\n");
       log_error("Runtime", "Failed to wait for events");
-      return 1;
+      return cleanup_and_return(1);
     }
 
     for (int i = 0; i < num_events; ++i) {
@@ -164,6 +176,7 @@ int main(int argc, char* argv[]) {
 
   close(server_fd); 
   unlink(BKK_UDS_SOCKET_PATH); 
+  curl_global_cleanup();
   return 0; 
 }
 
