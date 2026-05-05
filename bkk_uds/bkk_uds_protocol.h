@@ -1,6 +1,10 @@
 #ifndef BKK_UDS_PROTOCOL_H
 #define BKK_UDS_PROTOCOL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bkk_api_arrival.h"
 
 #define BKK_UDS_SOCKET_PATH "/tmp/bkk_uds.sock"
@@ -17,5 +21,8 @@ typedef struct {
   Arrival arrivals[BKK_UDS_MAX_ARRIVALS]; 
 } bkk_uds_response_t;
 
+#ifdef __cplusplus
+} // extern "C"
+#endif // __cplusplus
 
 #endif // BKK_UDS_PROTOCOL_H
