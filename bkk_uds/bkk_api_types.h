@@ -1,6 +1,9 @@
 #ifndef BKK_API_TYPES_H
 #define BKK_API_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 namespace bkk_api {
 
@@ -44,6 +47,8 @@ static inline const char* error_code_to_string(ErrorCode code) {
 
 } // namespace bkk_api
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BKK_API_TYPES_H
