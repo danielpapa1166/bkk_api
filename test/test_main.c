@@ -1,5 +1,6 @@
 #include "bkk_uds_client.h"
 #include "bkk_stop_utils.h"
+#include <rbuflogd/logger.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,6 +13,7 @@ static void print_usage(const char *prog_name) {
 }
 
 int main(int argc, char **argv) {
+  rbuflogd_logger_init("bkk_clnt");
 
   const char * substring = "Kossuth";
   int opt;
@@ -31,7 +33,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  printf("Stop list size: %d\n", get_stop_list_size());
   struct timespec t_start, t_end;
 
   clock_gettime(CLOCK_MONOTONIC, &t_start);
@@ -59,6 +60,9 @@ int main(int argc, char **argv) {
 
   clock_gettime(CLOCK_MONOTONIC, &t_start);
 
+  rbuflogd_logger_info("init", "BKK API test client init succeeded");
+  char msg[256];
+
   for (size_t i = 0; i < count; i++) {
     bkk_stop_t stop;
     const bkk_stop_stat_t stat = find_stop_by_index(indices[i], &stop);
@@ -67,9 +71,19 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    const int res = send_bkk_uds_query(stop.stop_id, &response);
+    const bkk_client_status_t res = send_bkk_uds_query(stop.stop_id, &response);
+    const bkk_api_status_t api_status = response.status;
 
-    if(res == 0) {
+    snprintf(msg, sizeof(msg), 
+      "Query for stop_id %s returned status: %d, api fetch status: %s", 
+      stop.stop_id, 
+      (int)res, 
+      error_code_to_string(api_status));
+      
+    rbuflogd_logger_info("querry", msg);
+
+
+    if(res == client_OK) {
       printf("Received %d arrivals for stop_id %s\n", 
         response.number_of_arrivals, stop.stop_id);
 
