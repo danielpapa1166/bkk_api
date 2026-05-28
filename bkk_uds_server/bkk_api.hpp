@@ -2,21 +2,12 @@
 #define BKK_API_HPP
 
 #include "bkk_api_arrival.h"
+#include "bkk_api_types.h"
 #include <string>
 #include <vector>
 
 namespace bkk_api {
 
-enum class ErrorCode {
-    Ok = 0,
-    MissingApiKey,
-    CurlInitFailed,
-    CurlPerformFailed,
-    HttpError,
-    FetchArrivalsFailed,
-    ArrivalsParseFailed,
-    UnexpectedException
-};
 
 std::string get_env_var(const std::string& key);
 ErrorCode get_arrivals_for_station(
