@@ -168,10 +168,8 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < num_events; ++i) {
       if(events[i].data.fd == server_fd) {
-        printf("New client connection\n");
         int client_fd = accept(server_fd, nullptr, nullptr);
         if(client_fd < 0) {
-          printf("Failed to accept client connection\n");
           log_error("Runtime", "Failed to accept client connection");
           continue;
         }
@@ -189,7 +187,8 @@ int main(int argc, char* argv[]) {
 }
 
 static void print_usage(const char * prog_name) {
-  printf("Usage: %s [-k api_key_file] [-f freshness_seconds] [-s staleness_seconds] [-l max_cache_size]\n",
+  printf("Usage: %s [-k api_key_file] "
+    "[-f freshness_seconds] [-s staleness_seconds] [-l max_cache_size]\n",
     prog_name);
 }
 
@@ -297,7 +296,6 @@ static int init_server(int * const event_fd, int * const server_fd) {
 
 static void handle_client(int client_fd, UdsCache & cache) {
   const auto t_start = std::chrono::steady_clock::now();
-  printf("Handling client on fd %d\n", client_fd);
   bkk_uds_request_t request {};
   ssize_t n = recv(client_fd, &request, sizeof(request), 0);
   if (n != sizeof(request)) {
@@ -307,19 +305,14 @@ static void handle_client(int client_fd, UdsCache & cache) {
     return;
   }
 
-  printf("Received request for stop_id: %s\n", request.stop_id);
-
   // check cache first:
   std::vector<Arrival> arrivals; 
   cache_entry_t cache_entry;
   cache_state_t cache_state = cache.get_element(request.stop_id, &cache_entry);
   if (cache_state == CACHE_HIT_FRESH) {
     arrivals = cache_entry.arrivals;
-    printf("Cache hit (fresh) for stop_id: %s\n", request.stop_id);
   } 
   else if (cache_state == CACHE_HIT_STALE) {
-    printf("Cache hit (stale) for stop_id: %s\n", request.stop_id);
-
     // fetch fresh data in the background 
     std::thread([&cache, request](){
       std::vector<Arrival> fresh_arrivals;
@@ -332,7 +325,6 @@ static void handle_client(int client_fd, UdsCache & cache) {
     arrivals = cache_entry.arrivals;
   }
   else {
-    printf("Cache miss for stop_id: %s\n", request.stop_id);
     fresh_fetch_and_update_cache(
       request.stop_id, 
       cache, 
@@ -352,7 +344,6 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
   ssize_t sent_size = send(client_fd, &response, sizeof(response), 0);
   if (sent_size != sizeof(response)) {
-    printf("Failed to send response to client\n");
     log_error("Runtime", "Failed to send response to client");
   }
 

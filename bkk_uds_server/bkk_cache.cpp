@@ -2,8 +2,6 @@
 
 
 UdsCache::UdsCache(cache_config_t * config) {
-  printf("Sizeof cache_entry_t: %lu bytes\n", sizeof(cache_entry_t));
-
   if(config == nullptr) {
     return;
   }
@@ -23,8 +21,6 @@ void UdsCache::put_element(
 
   // Clean up stale entries after adding a new one
   remove_stale_entries();
-
-  printf("Cache elements: %lu\n", cache.size());
 }
 
 
@@ -39,24 +35,13 @@ cache_state_t UdsCache::get_element(
   const cache_entry_t & entry = it->second;
   const auto now = std::chrono::steady_clock::now();
 
-  if (now - entry.timestamp < std::chrono::seconds(cache_freshness_seconds)) {
-    printf("Fresh cache hit: now: %lld, timestamp: %lld\n",
-      (long long)std::chrono::duration_cast<std::chrono::seconds>(
-      now.time_since_epoch()).count(),
-      (long long)std::chrono::duration_cast<std::chrono::seconds>(
-      entry.timestamp.time_since_epoch()).count());
-
+  if (now - entry.timestamp < 
+      std::chrono::seconds(cache_freshness_seconds)) {
     *entry_out = entry;
     return CACHE_HIT_FRESH;
   } 
-  else if (now - entry.timestamp < std::chrono::seconds(cache_staleness_seconds)) {
-
-    printf("Stale cache hit: now: %lld, timestamp: %lld\n",
-      (long long)std::chrono::duration_cast<std::chrono::seconds>(
-      now.time_since_epoch()).count(),
-      (long long)std::chrono::duration_cast<std::chrono::seconds>(
-      entry.timestamp.time_since_epoch()).count());
-
+  else if (now - entry.timestamp < 
+      std::chrono::seconds(cache_staleness_seconds)) {
     *entry_out = entry;
     return CACHE_HIT_STALE;
   }
@@ -70,13 +55,8 @@ void UdsCache::remove_stale_entries() {
   for (auto it = cache.begin(); it != cache.end(); ) {
     if (now - it->second.timestamp >= std::chrono::seconds(cache_staleness_seconds)) {
       it = cache.erase(it);
-    } else {
-      printf("Cache entry: stop_id: %s, timestamp: %lld, now: %lld\n", 
-        it->first.c_str(), 
-        (long long)std::chrono::duration_cast<std::chrono::seconds>(
-          it->second.timestamp.time_since_epoch()).count(),
-        (long long)std::chrono::duration_cast<std::chrono::seconds>(
-          now.time_since_epoch()).count());
+    } 
+    else {
       ++it;
     }
   }
