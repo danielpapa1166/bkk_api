@@ -19,6 +19,18 @@ typedef enum {
   CACHE_MISS, 
 } cache_state_t;
 
+static inline const char* cache_state_to_string(cache_state_t state) {
+  switch(state) {
+    case CACHE_HIT_FRESH:
+      return "HIT_FRESH";
+    case CACHE_HIT_STALE:
+      return "HIT_STALE";
+    case CACHE_MISS:
+    default:
+      return "MISS";
+  }
+}
+
 typedef struct {
   int freshness_seconds;
   int staleness_seconds;

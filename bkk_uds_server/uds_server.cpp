@@ -11,7 +11,7 @@
 #include "bkk_cache.hpp"
 
 #include <curl/curl.h>
-#include <rbuflogd/producer.h>
+#include <rbuflogd/logger.h>
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -28,7 +28,6 @@
 
 static const int MAX_EVENTS = 10;
 static std::string bkk_api_key; 
-static rbuflogd_producer_t * logger = new rbuflogd_producer_t;
 
 
 static int init_server(int * const event_fd, int * const server_fd);
@@ -38,19 +37,11 @@ static std::string read_api_key_from_file(const std::string & path);
 static void handle_client(int client_fd, UdsCache & cache); 
 static void fresh_fetch_and_update_cache(
   const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
-static void log_debug(const std::string & category, const std::string & message);
-static void BKK_MAYBE_UNUSED log_info(
-  const std::string & category, const std::string & message);
-static void BKK_MAYBE_UNUSED log_warn(
-  const std::string & category, const std::string & message);
-static void log_error(const std::string & category, const std::string & message);
-
-
 
 int main(int argc, char* argv[]) {
 
-  if (rbuflogd_producer_open(logger, "bkk_srv") != 0) {
-    logger = nullptr;
+  const int log_init_status = rbuflogd_logger_init("bkk_srv");
+  if (log_init_status != 0) {
     printf("Failed to initialize logger\n");
   }
 
@@ -152,7 +143,7 @@ int main(int argc, char* argv[]) {
   UdsCache cache(&cache_config);
   epoll_event events[MAX_EVENTS];
 
-  log_debug("Init", "Server initialized successfully");
+  log_info("Init", "Server initialized successfully");
 
   while (1) {
     int num_events = epoll_wait(
@@ -349,33 +340,14 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
   close(client_fd);
 
-  // log message debug: 
-  char log_msg[256];
-  char cache_status_str[16];
-  switch(cache_state) {
-    case CACHE_HIT_FRESH:
-      strncpy(cache_status_str, "HIT_FRESH", sizeof(cache_status_str) -
-        1);
-      break;
-    case CACHE_HIT_STALE:
-      strncpy(cache_status_str, "HIT_STALE", sizeof(cache_status_str) -
-        1);
-      break;
-    case CACHE_MISS:
-    default:  
-      strncpy(cache_status_str, "MISS", sizeof(cache_status_str) - 1);
-      break;
-  }
-  snprintf(
-    log_msg, 
-    sizeof(log_msg), 
-    "Handled request for stop_id: %s, returned %d arrivals in %lld us, cache_status: %s",
-    request.stop_id,
-    num_arrivals,
-    (long long)std::chrono::duration_cast<std::chrono::microseconds>(
-      std::chrono::steady_clock::now() - t_start).count(),
-    cache_status_str);
-  log_debug("Request", log_msg);
+  auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+    std::chrono::steady_clock::now() - t_start).count();
+
+  log_info("Request", ("Handled request for stop_id: " 
+      + std::string(request.stop_id) 
+      + ", returned " + std::to_string(num_arrivals) + " arrivals," 
+      + " cache_status: " + cache_state_to_string(cache_state)
+      + " in " + std::to_string(duration_us) + " us").c_str());
 
 }
 
@@ -387,11 +359,8 @@ static void fresh_fetch_and_update_cache(
   bkk_api::ErrorCode fetch_status = bkk_api::get_arrivals_for_station(
     stop_id, bkk_api_key, &fresh_arrivals);
   if (fetch_status != bkk_api::ErrorCode::Ok) {
-    char log_msg[256];
-    snprintf(log_msg, sizeof(log_msg),
-      "Failed to fetch arrivals for stop_id: %s, error code: %d",
-      stop_id.c_str(), (int)fetch_status);
-    log_error("Fetch", log_msg); 
+    log_error("Fetch", ("Failed to fetch arrivals for stop ID: " + stop_id 
+        + ", error: " + bkk_api::error_code_to_string(fetch_status)).c_str()); 
     return; 
   }
   *arrivals_out = fresh_arrivals;
@@ -401,40 +370,4 @@ static void fresh_fetch_and_update_cache(
     std::chrono::steady_clock::now()
   };
   cache.put_element(stop_id, new_cache_entry);
-}
-
-
-static void log_debug(const std::string & category, const std::string & message) {
-  if(logger == nullptr) {
-    return; 
-  }
-  rbuflogd_producer_log(
-    logger, RBUF_LOG_LEVEL_DEBUG, 
-    category.c_str(), message.c_str()); 
-}
-static void BKK_MAYBE_UNUSED log_info(
-    const std::string & category, const std::string & message) {
-  if(logger == nullptr) {
-    return; 
-  }
-  rbuflogd_producer_log(
-    logger, RBUF_LOG_LEVEL_INFO, 
-    category.c_str(), message.c_str()); 
-}
-static void BKK_MAYBE_UNUSED log_warn(
-    const std::string & category, const std::string & message) {
-  if(logger == nullptr) {
-    return; 
-  }
-  rbuflogd_producer_log(
-    logger, RBUF_LOG_LEVEL_WARNING, 
-    category.c_str(), message.c_str()); 
-}
-static void log_error(const std::string & category, const std::string & message) {
-  if(logger == nullptr) {
-    return; 
-  }
-  rbuflogd_producer_log(
-    logger, RBUF_LOG_LEVEL_ERROR, 
-    category.c_str(), message.c_str()); 
 }
