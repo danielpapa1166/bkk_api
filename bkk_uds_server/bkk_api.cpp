@@ -1,13 +1,16 @@
 #include "bkk_api.hpp"
+#include "bkk_api_types.h"
 #include "bkk_response_parser.hpp"
+#include <rbuflogd/logger.h>
 #include <curl/curl.h>
 #include <cstdlib>
 #include <iostream>
 #include <map>
 
-namespace {
+namespace bkk_api {
 
 constexpr const char* BASE_URL = "https://futar.bkk.hu/api/query/v1/ws/otp/api/where";
+const char * CAT = "bkk_api";
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
   userp->append((char*)contents, size * nmemb);
@@ -72,6 +75,10 @@ bkk_api::ErrorCode make_request(
   if (res != CURLE_OK) {
     return bkk_api::ErrorCode::CurlPerformFailed;
   }
+  if(http_code == 401) {
+    return bkk_api::ErrorCode::InvalidApiKey;
+  }
+
   if (http_code < 200 || http_code >= 300) {
     return bkk_api::ErrorCode::HttpError;
   }
@@ -100,7 +107,7 @@ bkk_api::ErrorCode get_arrivals_for_stop(
       "arrivals-and-departures-for-stop.json", api_key, params, response_out);
 }
 
-} // namespace
+} // namespace bkk_api
 
 std::string bkk_api::get_env_var(const std::string& key) {
   const char* val = std::getenv(key.c_str());
@@ -113,18 +120,18 @@ bkk_api::ErrorCode bkk_api::get_arrivals_for_station(
     std::vector<Arrival>* const output_arrivals) {
 
   if (output_arrivals == nullptr) {
-    return ErrorCode::UnexpectedException;
+    return bkk_api::ErrorCode::UnexpectedException;
   }
 
   output_arrivals->clear();
 
   try {
     std::string server_response;
-    ErrorCode fetch_status = get_arrivals_for_stop(
+    bkk_api::ErrorCode fetch_status = get_arrivals_for_stop(
         stop_id, api_key, &server_response);
     if (fetch_status != ErrorCode::Ok) {
-      std::cerr << "Failed to fetch arrivals for stop " << stop_id
-                << ", error code: " << static_cast<int>(fetch_status) << std::endl;
+      log_error(CAT, ("Failed to fetch arrivals for stop " + stop_id
+                + ", error: " + error_code_to_string(fetch_status)).c_str());
       return fetch_status;
     }
 
@@ -133,7 +140,10 @@ bkk_api::ErrorCode bkk_api::get_arrivals_for_station(
     if (!is_successful_parse_status(parse_status)) {
       std::cerr << "Arrival parsing returned status code: "
                 << static_cast<int>(parse_status) << std::endl;
-      return ErrorCode::ArrivalsParseFailed;
+
+      log_error(CAT, ("Failed to parse arrivals for stop " + stop_id
+                + ", parse status: " + parse_status_to_string(parse_status)).c_str());
+      return bkk_api::ErrorCode::ArrivalsParseFailed;
     }
 
     return ErrorCode::Ok;
