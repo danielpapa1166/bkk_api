@@ -5,9 +5,7 @@
 extern "C" {
 #endif
 
-namespace bkk_api {
-
-enum class ErrorCode {
+typedef enum bkk_api_status{
   Ok = 0,
   MissingApiKey,
   CurlInitFailed,
@@ -17,35 +15,32 @@ enum class ErrorCode {
   FetchArrivalsFailed,
   ArrivalsParseFailed,
   UnexpectedException
-};
+} bkk_api_status_t;
 
-static inline const char* error_code_to_string(ErrorCode code) {
+static inline const char* error_code_to_string(bkk_api_status_t code) {
   switch (code) {
-    case ErrorCode::Ok:
+    case Ok:
       return "Ok";
-    case ErrorCode::MissingApiKey:
+    case MissingApiKey:
       return "MissingApiKey";
-    case ErrorCode::CurlInitFailed:
+    case CurlInitFailed:
       return "CurlInitFailed";
-    case ErrorCode::CurlPerformFailed:
+    case CurlPerformFailed:
       return "CurlPerformFailed";
-    case ErrorCode::InvalidApiKey:
+    case InvalidApiKey:
       return "InvalidApiKey";
-    case ErrorCode::HttpError:          
+    case HttpError:
       return "HttpError";
-    case ErrorCode::FetchArrivalsFailed:
+    case FetchArrivalsFailed:
       return "FetchArrivalsFailed";
-    case ErrorCode::ArrivalsParseFailed:
+    case ArrivalsParseFailed:
       return "ArrivalsParseFailed";
-    case ErrorCode::UnexpectedException:
+    case UnexpectedException:
       return "UnexpectedException";
     default:
-      return "UnknownErrorCode";    
+      return "UnknownBkkApiStatus";    
   }; 
 }
-
-
-} // namespace bkk_api
 
 #ifdef __cplusplus
 }

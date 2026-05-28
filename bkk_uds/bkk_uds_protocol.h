@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "bkk_api_arrival.h"
+#include "bkk_api_types.h"
 
 #define BKK_UDS_SOCKET_PATH "/tmp/bkk_uds.sock"
 #define BKK_UDS_MAX_STOP_ID_LEN 64
@@ -17,6 +18,7 @@ typedef struct {
 } bkk_uds_request_t;
 
 typedef struct {
+  bkk_api_status_t status;
   int number_of_arrivals;
   Arrival arrivals[BKK_UDS_MAX_ARRIVALS]; 
 } bkk_uds_response_t;

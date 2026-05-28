@@ -7,6 +7,7 @@
 #include <chrono>
 
 #include "bkk_api.hpp"
+#include "bkk_api_types.h"
 #include "bkk_uds_protocol.h"
 #include "bkk_cache.hpp"
 
@@ -35,7 +36,7 @@ static void print_usage(const char * prog_name);
 static bool parse_positive_int(const char * arg, int * out_value);
 static std::string read_api_key_from_file(const std::string & path);
 static void handle_client(int client_fd, UdsCache & cache); 
-static void fresh_fetch_and_update_cache(
+static bkk_api_status_t fresh_fetch_and_update_cache(
   const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
 
 int main(int argc, char* argv[]) {
@@ -298,25 +299,31 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
   // check cache first:
   std::vector<Arrival> arrivals; 
+  bkk_api_status_t api_status; 
   cache_entry_t cache_entry;
   cache_state_t cache_state = cache.get_element(request.stop_id, &cache_entry);
   if (cache_state == CACHE_HIT_FRESH) {
     arrivals = cache_entry.arrivals;
+    // no failed fetch entry gets into the cache
+    api_status = bkk_api_status::Ok;
   } 
   else if (cache_state == CACHE_HIT_STALE) {
     // fetch fresh data in the background 
     std::thread([&cache, request](){
       std::vector<Arrival> fresh_arrivals;
-      fresh_fetch_and_update_cache(
+      (void) fresh_fetch_and_update_cache(
         request.stop_id, 
         cache, 
         &fresh_arrivals);
     }).detach();
 
     arrivals = cache_entry.arrivals;
+
+    // no failed fetch entry gets into the cache
+    api_status = bkk_api_status::Ok;
   }
   else {
-    fresh_fetch_and_update_cache(
+    api_status = fresh_fetch_and_update_cache(
       request.stop_id, 
       cache, 
       &arrivals); 
@@ -326,7 +333,7 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
 
   bkk_uds_response_t response {};
-
+  response.status = api_status;
   response.number_of_arrivals = num_arrivals;
   for (int i = 0; i < num_arrivals; i++) {
     response.arrivals[i] = arrivals[i];
@@ -352,16 +359,16 @@ static void handle_client(int client_fd, UdsCache & cache) {
 }
 
 
-static void fresh_fetch_and_update_cache(
+static bkk_api_status_t fresh_fetch_and_update_cache(
     const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
 
   std::vector<Arrival> fresh_arrivals;
-  bkk_api::ErrorCode fetch_status = bkk_api::get_arrivals_for_station(
+  bkk_api_status_t fetch_status = bkk_api::get_arrivals_for_station(
     stop_id, bkk_api_key, &fresh_arrivals);
-  if (fetch_status != bkk_api::ErrorCode::Ok) {
+  if (fetch_status != bkk_api_status::Ok) {
     log_error("Fetch", ("Failed to fetch arrivals for stop ID: " + stop_id 
-        + ", error: " + bkk_api::error_code_to_string(fetch_status)).c_str()); 
-    return; 
+        + ", error: " + error_code_to_string(fetch_status)).c_str()); 
+    return fetch_status; 
   }
   *arrivals_out = fresh_arrivals;
 
@@ -370,4 +377,5 @@ static void fresh_fetch_and_update_cache(
     std::chrono::steady_clock::now()
   };
   cache.put_element(stop_id, new_cache_entry);
+  return bkk_api_status::Ok;
 }

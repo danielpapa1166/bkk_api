@@ -10,7 +10,7 @@ namespace bkk_api {
 
 
 std::string get_env_var(const std::string& key);
-ErrorCode get_arrivals_for_station(
+bkk_api_status_t get_arrivals_for_station(
     const std::string& stop_id,
     const std::string& api_key,
     std::vector<Arrival>* const output_arrivals);

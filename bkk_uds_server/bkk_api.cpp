@@ -22,18 +22,18 @@ bool is_successful_parse_status(ArrivalsParseStatus status) {
       || status == ArrivalsParseStatus::SuccessWithWarnings;
 }
 
-bkk_api::ErrorCode make_request(
+bkk_api_status_t make_request(
     const std::string& endpoint,
     const std::string& api_key,
     const std::map<std::string, std::string>& params,
     std::string* const response_out) {
 
   if (response_out == nullptr) {
-    return bkk_api::ErrorCode::UnexpectedException;
+    return bkk_api_status::UnexpectedException;
   }
 
   if(api_key.empty()) {
-    return bkk_api::ErrorCode::MissingApiKey;
+    return bkk_api_status::MissingApiKey;
   }
 
   std::string url = std::string(BASE_URL) + "/" + endpoint + "?";
@@ -56,7 +56,7 @@ bkk_api::ErrorCode make_request(
 
   CURL* curl = curl_easy_init();
   if (!curl) {
-    return bkk_api::ErrorCode::CurlInitFailed;
+    return bkk_api_status::CurlInitFailed;
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -73,20 +73,20 @@ bkk_api::ErrorCode make_request(
   curl_easy_cleanup(curl);
 
   if (res != CURLE_OK) {
-    return bkk_api::ErrorCode::CurlPerformFailed;
+    return bkk_api_status::CurlPerformFailed;
   }
   if(http_code == 401) {
-    return bkk_api::ErrorCode::InvalidApiKey;
+    return bkk_api_status::InvalidApiKey;
   }
 
   if (http_code < 200 || http_code >= 300) {
-    return bkk_api::ErrorCode::HttpError;
+    return bkk_api_status::HttpError;
   }
 
-  return bkk_api::ErrorCode::Ok;
+  return bkk_api_status::Ok;
 }
 
-bkk_api::ErrorCode get_arrivals_for_stop(
+bkk_api_status_t get_arrivals_for_stop(
     const std::string& stop_id,
     const std::string& api_key,
     std::string* const response_out) {
@@ -114,22 +114,22 @@ std::string bkk_api::get_env_var(const std::string& key) {
   return (val == nullptr) ? std::string() : std::string(val);
 }
 
-bkk_api::ErrorCode bkk_api::get_arrivals_for_station(
+bkk_api_status_t bkk_api::get_arrivals_for_station(
     const std::string& stop_id,
     const std::string& api_key,
     std::vector<Arrival>* const output_arrivals) {
 
   if (output_arrivals == nullptr) {
-    return bkk_api::ErrorCode::UnexpectedException;
+    return bkk_api_status::UnexpectedException;
   }
 
   output_arrivals->clear();
 
   try {
     std::string server_response;
-    bkk_api::ErrorCode fetch_status = get_arrivals_for_stop(
+    bkk_api_status_t fetch_status = get_arrivals_for_stop(
         stop_id, api_key, &server_response);
-    if (fetch_status != ErrorCode::Ok) {
+    if (fetch_status != bkk_api_status::Ok) {
       log_error(CAT, ("Failed to fetch arrivals for stop " + stop_id
                 + ", error: " + error_code_to_string(fetch_status)).c_str());
       return fetch_status;
@@ -143,13 +143,13 @@ bkk_api::ErrorCode bkk_api::get_arrivals_for_station(
 
       log_error(CAT, ("Failed to parse arrivals for stop " + stop_id
                 + ", parse status: " + parse_status_to_string(parse_status)).c_str());
-      return bkk_api::ErrorCode::ArrivalsParseFailed;
+      return bkk_api_status::ArrivalsParseFailed;
     }
 
-    return ErrorCode::Ok;
+    return bkk_api_status::Ok;
   } catch (const std::exception& e) {
     printf("Error getting arrivals for station: %s\n", e.what());
-    return ErrorCode::UnexpectedException;
+    return bkk_api_status::UnexpectedException;
   }
 }
 

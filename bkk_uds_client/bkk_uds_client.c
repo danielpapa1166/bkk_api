@@ -1,4 +1,5 @@
 #include "bkk_uds_client.h"
+#include "bkk_api_types.h"
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -6,16 +7,16 @@
 #include <string.h>
 
 
-int send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
+bkk_client_status_t send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
   if(!stop_id || !response) {
     printf("Invalid arguments to send_bkk_uds_query\n");
-    return 1;
+    return client_InvalidArguments;
   }
   
   int client_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
   if(client_fd < 0) {
     printf("Failed to create socket\n");
-    return 1;
+    return client_SocketError;
   }
 
   struct sockaddr_un server_addr; 
@@ -31,7 +32,7 @@ int send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
   if(connect_res < 0) {
     printf("Failed to connect to server\n");
     close(client_fd);
-    return 1;
+    return client_ConnectionFailed;
   }
 
   bkk_uds_request_t request; 
@@ -42,7 +43,7 @@ int send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
   if(sent_size != sizeof(request)) {
     printf("Failed to send request to server\n");
     close(client_fd);
-    return 1;
+    return client_SendFailed;
   }
 
   // Receive response from server
@@ -50,8 +51,8 @@ int send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
   close(client_fd);
   if(recv_size != sizeof(*response)) {
     printf("Failed to receive response from server\n");
-    return 1;
+    return client_ReceiveFailed;
   }
 
-  return 0;
+  return client_OK;
 }
