@@ -8,9 +8,9 @@
 
 
 api_key_read_stat_t read_api_key_from_file(const char * path, 
-    char ** key_out, size_t * key_out_size) {
+    char ** key_out) {
 
-  if(path == NULL || key_out == NULL || key_out_size == NULL) {
+  if(path == NULL || key_out == NULL) {
     return API_KEY_READ_ERROR;
   }
 
@@ -70,7 +70,6 @@ api_key_read_stat_t read_api_key_from_file(const char * path,
   free(buffer);
   key_no_whitspace[key_length] = '\0';
   *key_out = key_no_whitspace;
-  *key_out_size = key_length;
     
   return API_KEY_READ_OK;
 }

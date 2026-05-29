@@ -18,7 +18,6 @@ extern "C" {
 typedef struct {
   char stop_id[BKK_UDS_MAX_STOP_ID_LEN]; 
   char api_key[BKK_UDS_MAX_KEY_LEN];
-  size_t api_key_len;
 } bkk_uds_request_t;
 
 typedef struct {

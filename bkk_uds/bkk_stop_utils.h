@@ -18,8 +18,7 @@ typedef enum {
   API_KEY_READ_ERROR,
 } api_key_read_stat_t;
 
-api_key_read_stat_t read_api_key_from_file(const char * path, 
-  char ** key_out, size_t * key_out_size);
+api_key_read_stat_t read_api_key_from_file(const char * path, char ** key_out);
 int get_stop_list_size(void); 
 bkk_stop_stat_t find_stop_by_id(
   const char * stop_id, bkk_stop_t * stop_out);

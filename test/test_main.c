@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   const char * substring = "Kossuth";
   const char * key_path = NULL; 
   int opt;
-  while((opt = getopt(argc, argv, "s:h:k")) != -1) {
+  while((opt = getopt(argc, argv, "s:h:k:")) != -1) {
     switch(opt) {
       case 's':
         if(optarg != NULL && optarg[0] != '\0') {
@@ -30,7 +30,12 @@ int main(int argc, char **argv) {
         print_usage(argv[0]);
         return 0;
       case 'k':
-        key_path = optarg;
+        if(optarg != NULL && optarg[0] != '\0') {
+          key_path = optarg;
+        }
+        else {
+          printf("Invalid API key file path\n");
+        }
         break;
       default:
         print_usage(argv[0]);
@@ -45,16 +50,12 @@ int main(int argc, char **argv) {
   }
 
   char * key_val; 
-  size_t key_len;
-  const int api_key_stat = read_api_key_from_file(
-    key_path, &key_val, &key_len);
+  const int api_key_stat = read_api_key_from_file(key_path, &key_val);
 
   if(api_key_stat != API_KEY_READ_OK) {
     log_error("Init", "Failed to read API key from file");
     return 1;
   }
-
-
 
   struct timespec t_start, t_end;
 
@@ -97,7 +98,6 @@ int main(int argc, char **argv) {
     bkk_uds_request_t request = { 0 };
     strncpy(request.stop_id, stop.stop_id, sizeof(request.stop_id) - 1);
     strncpy(request.api_key, key_val, sizeof(request.api_key) - 1);
-    request.api_key_len = key_len;
 
     const bkk_client_status_t res = send_bkk_uds_query(&request, &response);
     const bkk_api_status_t api_status = response.status;
@@ -136,6 +136,7 @@ int main(int argc, char **argv) {
                   + (t_end.tv_nsec - t_start.tv_nsec) / 1000L;
   printf("Total fetch time: %ld us\n", elapsed_us);
   
+  free(key_val);
   free(indices);
   return 0; 
 }
