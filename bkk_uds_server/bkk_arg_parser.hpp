@@ -2,10 +2,7 @@
 #define BKK_ARG_PARSER_HPP
 
 
-#include <string>
-
 typedef struct {
-  std::string api_key_file_path;
   int freshness_seconds;
   int staleness_seconds;
   int max_cache_size;

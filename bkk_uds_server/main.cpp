@@ -22,23 +22,14 @@
 #include <thread>
 #include <unistd.h>
 
-#if defined(__GNUC__) || defined(__clang__)
-#define BKK_MAYBE_UNUSED __attribute__((unused))
-#else
-#define BKK_MAYBE_UNUSED
-#endif
-
 
 static const int MAX_EVENTS = 10;
-static std::string bkk_api_key; 
-
 
 static int init_server(int * const event_fd, int * const server_fd);
 static void print_usage(const char * prog_name);
-static std::string read_api_key_from_file(const std::string & path);
 static void handle_client(int client_fd, UdsCache & cache); 
 static bkk_api_status_t fresh_fetch_and_update_cache(
-  const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
+  const bkk_uds_request_t & request, UdsCache & cache, std::vector<Arrival> * arrivals_out);
 
 void test_fun() {
   printf("This is a test function to keep the thread pool worker threads busy\n");
@@ -73,29 +64,12 @@ int main(int argc, char* argv[]) {
     return code;
   };
 
-  if(!config.api_key_file_path.empty()) {
-    try {
-      bkk_api_key = read_api_key_from_file(config.api_key_file_path);
-    } catch (const std::exception& e) {
-      log_error("Init", ("Failed to read API key from file: " + std::string(e.what())).c_str());
-      return cleanup_and_return(1);
-    }
-  } else {
-    bkk_api_key = bkk_api::get_env_var("BKK_API_KEY");
-  }
-
-  if (bkk_api_key.empty()) {
-    printf("API key is required (set BKK_API_KEY or pass -k <key_file_path>)\n");
-    log_error("Init", "API key not provided");
-    return cleanup_and_return(1);
-  }
-
 
   const size_t num_threads = std::thread::hardware_concurrency();
-  ThreadPool thread_pool(num_threads);
+  /*ThreadPool thread_pool(num_threads);
 
   thread_pool.submit(test_fun);
-  thread_pool.submit(test_fun);
+  thread_pool.submit(test_fun);*/
   
 
   log_info("Init", ("Using " + std::to_string(num_threads) + " threads").c_str());
@@ -153,30 +127,6 @@ static void print_usage(const char * prog_name) {
   printf("Usage: %s [-k api_key_file] "
     "[-f freshness_seconds] [-s staleness_seconds] [-l max_cache_size]\n",
     prog_name);
-}
-
-
-static std::string read_api_key_from_file(const std::string & path) {
-  std::ifstream infile(path);
-  if(!infile.is_open()) {
-    throw std::runtime_error("cannot open file: " + path);
-  }
-
-  std::string key;
-  std::getline(infile, key);
-
-  // trim leading/trailing whitespace so newline-terminated files work out of the box
-  size_t begin = 0;
-  while(begin < key.size() && std::isspace((unsigned char)key[begin])) {
-    begin++;
-  }
-
-  size_t end = key.size();
-  while(end > begin && std::isspace((unsigned char)key[end - 1])) {
-    end--;
-  }
-
-  return key.substr(begin, end - begin);
 }
 
 
@@ -264,7 +214,7 @@ static void handle_client(int client_fd, UdsCache & cache) {
     std::thread([&cache, request](){
       std::vector<Arrival> fresh_arrivals;
       (void) fresh_fetch_and_update_cache(
-        request.stop_id, 
+        request,
         cache, 
         &fresh_arrivals);
     }).detach();
@@ -276,7 +226,7 @@ static void handle_client(int client_fd, UdsCache & cache) {
   }
   else {
     api_status = fresh_fetch_and_update_cache(
-      request.stop_id, 
+      request, 
       cache, 
       &arrivals); 
   }
@@ -312,11 +262,13 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
 
 static bkk_api_status_t fresh_fetch_and_update_cache(
-    const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
+    const bkk_uds_request_t & request, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
 
   std::vector<Arrival> fresh_arrivals;
+  std::string api_key(request.api_key);
+  std::string stop_id(request.stop_id);
   bkk_api_status_t fetch_status = bkk_api::get_arrivals_for_station(
-    stop_id, bkk_api_key, &fresh_arrivals);
+    stop_id, api_key, &fresh_arrivals);
   if (fetch_status != bkk_api_status::Ok) {
     log_error("Fetch", ("Failed to fetch arrivals for stop ID: " + stop_id 
         + ", error: " + error_code_to_string(fetch_status)).c_str()); 
