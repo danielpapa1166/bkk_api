@@ -3,6 +3,7 @@ set(BKK_UDS_SERVER_SOURCES
     bkk_response_parser.cpp
     uds_server.cpp
     bkk_cache.cpp
+    bkk_thread_pool.cpp 
     ../submodules/cJSON/cJSON.c
 )
 

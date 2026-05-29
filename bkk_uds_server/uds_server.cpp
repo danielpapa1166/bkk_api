@@ -10,6 +10,7 @@
 #include "bkk_api_types.h"
 #include "bkk_uds_protocol.h"
 #include "bkk_cache.hpp"
+#include "bkk_thread_pool.hpp"
 
 #include <curl/curl.h>
 #include <rbuflogd/logger.h>
@@ -128,6 +129,12 @@ int main(int argc, char* argv[]) {
     log_error("Init", "API key not provided");
     return cleanup_and_return(1);
   }
+
+
+  const size_t num_threads = std::thread::hardware_concurrency();
+  ThreadPool thread_pool(num_threads);
+
+  log_info("Init", ("Using " + std::to_string(num_threads) + " threads").c_str());
 
   cache_config_t cache_config {
     freshness_seconds,
