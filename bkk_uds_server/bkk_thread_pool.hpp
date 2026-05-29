@@ -9,15 +9,18 @@
 #include <vector>
 
 class ThreadPool {
+
+typedef void (* task_t)(void);
+
 public:
   ThreadPool(size_t num_threads);
   ~ThreadPool();
-  bool submit(std::function<void()> task);
+  bool submit(task_t task);
 
 private:
   void thread_function(); 
   std::vector<std::thread> workers;
-  std::queue<std::function<void()>> tasks;
+  std::queue<task_t> tasks;
   std::mutex queue_mutex;
 
 }; 

@@ -8,11 +8,37 @@ ThreadPool::ThreadPool(size_t num_threads) {
 }
 
 
+bool ThreadPool::submit(task_t task) {
+  std::lock_guard<std::mutex> lock(queue_mutex);
+  tasks.push(task);
+  return true;
+}
+
+
 void ThreadPool::thread_function() {
   int foo = 42;
   while(1) {
     foo ++; 
     (void) foo; 
+
+    if(tasks.empty()) {
+      std::this_thread::yield();
+      continue;
+    }
+    else {
+      task_t task = tasks.front();
+      { 
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        if(!tasks.empty()) {
+          task = tasks.front();
+          tasks.pop();
+        }
+        else {
+          continue;
+        }
+      }
+      task();
+    }
   }
 }
 
