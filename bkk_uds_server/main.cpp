@@ -11,6 +11,7 @@
 #include "bkk_uds_protocol.h"
 #include "bkk_cache.hpp"
 #include "bkk_thread_pool.hpp"
+#include "bkk_arg_parser.hpp"
 
 #include <curl/curl.h>
 #include <rbuflogd/logger.h>
@@ -34,11 +35,14 @@ static std::string bkk_api_key;
 
 static int init_server(int * const event_fd, int * const server_fd);
 static void print_usage(const char * prog_name);
-static bool parse_positive_int(const char * arg, int * out_value);
 static std::string read_api_key_from_file(const std::string & path);
 static void handle_client(int client_fd, UdsCache & cache); 
 static bkk_api_status_t fresh_fetch_and_update_cache(
   const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
+
+void test_fun() {
+  printf("This is a test function to keep the thread pool worker threads busy\n");
+}
 
 int main(int argc, char* argv[]) {
 
@@ -47,63 +51,20 @@ int main(int argc, char* argv[]) {
     printf("Failed to initialize logger\n");
   }
 
-  std::string api_key_file_path;
-  int freshness_seconds = 10;
-  int staleness_seconds = 20;
-  int max_cache_size = 100;
+  arg_config_t config {};
+  const parse_status_t parse_status = parse_arguments(
+    argc, argv, &config);
 
-  int opt;
-  while((opt = getopt(argc, argv, "k:f:s:l:h")) != -1) {
-    switch(opt) {
-      case 'k':
-        if(optarg != nullptr && optarg[0] != '\0') {
-          api_key_file_path = optarg;
-        }
-        break;
-      case 'f':
-        if(!parse_positive_int(optarg, &freshness_seconds)) {
-          printf("Invalid freshness seconds: %s\n", optarg);
-          log_error("Init", "Invalid freshness seconds");
-          print_usage(argv[0]);
-          return 1;
-        }
-        break;
-      case 's':
-        if(!parse_positive_int(optarg, &staleness_seconds)) {
-          printf("Invalid staleness seconds: %s\n", optarg);
-          log_error("Init", "Invalid staleness seconds");
-          print_usage(argv[0]);
-          return 1;
-        }
-        break;
-      case 'l':
-        if(!parse_positive_int(optarg, &max_cache_size)) {
-          printf("Invalid max cache size: %s\n", optarg);
-          log_error("Init", "Invalid max cache size");
-          print_usage(argv[0]);
-          return 1;
-        }
-        break;
-      case 'h':
-        print_usage(argv[0]);
-        return 0;
-      default:
-        print_usage(argv[0]);
-        return 1;
-    }
+  if(parse_status != parse_status::ok) {
+    print_usage(argv[0]);
+    return parse_status == parse_status::help ? 0 : 1;
   }
 
-  if(staleness_seconds < freshness_seconds) {
-    printf("Invalid cache config: staleness (%d) must be >= freshness (%d)\n",
-      staleness_seconds, freshness_seconds);
-    log_error("Init", "Invalid cache config: staleness must be >= freshness");
-    return 1;
-  }
 
   const CURLcode curl_init_status = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (curl_init_status != CURLE_OK) {
-    printf("Failed to initialize libcurl: %s\n", curl_easy_strerror(curl_init_status));
-    log_error("Init", "Failed to initialize libcurl");
+    log_error("Init", ("Failed to initialize libcurl: " 
+      + std::string(curl_easy_strerror(curl_init_status))).c_str());
     return 1;
   }
 
@@ -112,12 +73,11 @@ int main(int argc, char* argv[]) {
     return code;
   };
 
-  if(!api_key_file_path.empty()) {
+  if(!config.api_key_file_path.empty()) {
     try {
-      bkk_api_key = read_api_key_from_file(api_key_file_path);
+      bkk_api_key = read_api_key_from_file(config.api_key_file_path);
     } catch (const std::exception& e) {
-      printf("Failed to read API key from file: %s\n", e.what());
-      log_error("Init", "Failed to read API key from file");
+      log_error("Init", ("Failed to read API key from file: " + std::string(e.what())).c_str());
       return cleanup_and_return(1);
     }
   } else {
@@ -134,12 +94,16 @@ int main(int argc, char* argv[]) {
   const size_t num_threads = std::thread::hardware_concurrency();
   ThreadPool thread_pool(num_threads);
 
+  thread_pool.submit(test_fun);
+  thread_pool.submit(test_fun);
+  
+
   log_info("Init", ("Using " + std::to_string(num_threads) + " threads").c_str());
 
   cache_config_t cache_config {
-    freshness_seconds,
-    staleness_seconds,
-    max_cache_size
+    config.freshness_seconds,
+    config.staleness_seconds,
+    config.max_cache_size
   };
 
   int event_fd, server_fd;
@@ -191,25 +155,6 @@ static void print_usage(const char * prog_name) {
     prog_name);
 }
 
-static bool parse_positive_int(const char * arg, int * out_value) {
-  if(arg == nullptr || out_value == nullptr) {
-    return false;
-  }
-
-  errno = 0;
-  char * endptr = nullptr;
-  long value = strtol(arg, &endptr, 10);
-
-  if(errno != 0 || endptr == arg || *endptr != '\0') {
-    return false;
-  }
-  if(value <= 0 || value > INT_MAX) {
-    return false;
-  }
-
-  *out_value = (int)value;
-  return true;
-}
 
 static std::string read_api_key_from_file(const std::string & path) {
   std::ifstream infile(path);

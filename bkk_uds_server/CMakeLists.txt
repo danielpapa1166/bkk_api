@@ -1,9 +1,10 @@
 set(BKK_UDS_SERVER_SOURCES
     bkk_api.cpp
     bkk_response_parser.cpp
-    uds_server.cpp
+    main.cpp
     bkk_cache.cpp
     bkk_thread_pool.cpp 
+    bkk_arg_parser.cpp
     ../submodules/cJSON/cJSON.c
 )
 
