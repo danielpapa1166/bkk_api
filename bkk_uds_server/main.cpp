@@ -31,7 +31,7 @@ static int init_server(int * const event_fd, int * const server_fd);
 static void print_usage(const char * prog_name);
 static void handle_client(int client_fd, UdsCache & cache); 
 static bkk_api_status_t fresh_fetch_and_update_cache(
-  const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
+  const bkk_uds_request_t & request, UdsCache & cache, std::vector<Arrival> * arrivals_out);
 
 void test_fun() {
   printf("This is a test function to keep the thread pool worker threads busy\n");
@@ -233,7 +233,7 @@ static void handle_client(int client_fd, UdsCache & cache) {
     std::thread([&cache, request](){
       std::vector<Arrival> fresh_arrivals;
       (void) fresh_fetch_and_update_cache(
-        request.stop_id, 
+        request,
         cache, 
         &fresh_arrivals);
     }).detach();
@@ -245,7 +245,7 @@ static void handle_client(int client_fd, UdsCache & cache) {
   }
   else {
     api_status = fresh_fetch_and_update_cache(
-      request.stop_id, 
+      request, 
       cache, 
       &arrivals); 
   }
@@ -281,11 +281,13 @@ static void handle_client(int client_fd, UdsCache & cache) {
 
 
 static bkk_api_status_t fresh_fetch_and_update_cache(
-    const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
+    const bkk_uds_request_t & request, UdsCache & cache, std::vector<Arrival> * arrivals_out) {
 
   std::vector<Arrival> fresh_arrivals;
+  std::string api_key(request.api_key, request.api_key_len);
+  std::string stop_id(request.stop_id);
   bkk_api_status_t fetch_status = bkk_api::get_arrivals_for_station(
-    stop_id, bkk_api_key, &fresh_arrivals);
+    stop_id, api_key, &fresh_arrivals);
   if (fetch_status != bkk_api_status::Ok) {
     log_error("Fetch", ("Failed to fetch arrivals for stop ID: " + stop_id 
         + ", error: " + error_code_to_string(fetch_status)).c_str()); 

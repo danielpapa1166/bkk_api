@@ -17,7 +17,8 @@ typedef enum {
   client_ReceiveFailed,
 } bkk_client_status_t;
 
-bkk_client_status_t send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response); 
+bkk_client_status_t send_bkk_uds_query(
+  const bkk_uds_request_t * request, bkk_uds_response_t * response); 
 
 #ifdef __cplusplus
 } // extern "C"

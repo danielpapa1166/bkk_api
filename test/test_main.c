@@ -3,6 +3,7 @@
 #include <rbuflogd/logger.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -16,8 +17,9 @@ int main(int argc, char **argv) {
   rbuflogd_logger_init("bkk_clnt");
 
   const char * substring = "Kossuth";
+  const char * key_path = NULL; 
   int opt;
-  while((opt = getopt(argc, argv, "s:h")) != -1) {
+  while((opt = getopt(argc, argv, "s:h:k")) != -1) {
     switch(opt) {
       case 's':
         if(optarg != NULL && optarg[0] != '\0') {
@@ -27,11 +29,32 @@ int main(int argc, char **argv) {
       case 'h':
         print_usage(argv[0]);
         return 0;
+      case 'k':
+        key_path = optarg;
+        break;
       default:
         print_usage(argv[0]);
         return 1;
     }
   }
+
+  if(key_path == NULL) {
+    log_error("Init", "API key file path is required");
+    print_usage(argv[0]);
+    return 1;
+  }
+
+  char * key_val; 
+  size_t key_len;
+  const int api_key_stat = read_api_key_from_file(
+    key_path, &key_val, &key_len);
+
+  if(api_key_stat != API_KEY_READ_OK) {
+    log_error("Init", "Failed to read API key from file");
+    return 1;
+  }
+
+
 
   struct timespec t_start, t_end;
 
@@ -71,7 +94,12 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    const bkk_client_status_t res = send_bkk_uds_query(stop.stop_id, &response);
+    bkk_uds_request_t request = { 0 };
+    strncpy(request.stop_id, stop.stop_id, sizeof(request.stop_id) - 1);
+    strncpy(request.api_key, key_val, sizeof(request.api_key) - 1);
+    request.api_key_len = key_len;
+
+    const bkk_client_status_t res = send_bkk_uds_query(&request, &response);
     const bkk_api_status_t api_status = response.status;
 
     snprintf(msg, sizeof(msg), 

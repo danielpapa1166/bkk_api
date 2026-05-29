@@ -7,8 +7,8 @@
 #include <string.h>
 
 
-bkk_client_status_t send_bkk_uds_query(const char * stop_id, bkk_uds_response_t * response) {
-  if(!stop_id || !response) {
+bkk_client_status_t send_bkk_uds_query(const bkk_uds_request_t * request, bkk_uds_response_t * response) {
+  if(!request || !response) {
     printf("Invalid arguments to send_bkk_uds_query\n");
     return client_InvalidArguments;
   }
@@ -35,12 +35,8 @@ bkk_client_status_t send_bkk_uds_query(const char * stop_id, bkk_uds_response_t 
     return client_ConnectionFailed;
   }
 
-  bkk_uds_request_t request; 
-  memset(&request, 0, sizeof(request)); 
-  strncpy(request.stop_id, stop_id, sizeof(request.stop_id) - 1);
-
-  const ssize_t sent_size = send(client_fd, &request, sizeof(request), 0);
-  if(sent_size != sizeof(request)) {
+  const ssize_t sent_size = send(client_fd, request, sizeof(*request), 0);
+  if(sent_size != sizeof(*request)) {
     printf("Failed to send request to server\n");
     close(client_fd);
     return client_SendFailed;
