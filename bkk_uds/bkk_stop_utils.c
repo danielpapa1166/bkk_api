@@ -1,9 +1,79 @@
 #include "bkk_stop_utils.h"
 #include "bkk_stop_list.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
+api_key_read_stat_t read_api_key_from_file(const char * path, 
+    char ** key_out, size_t * key_out_size) {
+
+  if(path == NULL || key_out == NULL || key_out_size == NULL) {
+    return API_KEY_READ_ERROR;
+  }
+
+
+  FILE * infile = fopen(path, "r");
+  if(infile == NULL) {
+    return API_KEY_READ_ERROR;
+  }
+
+  fseek(infile, 0, SEEK_END);
+  long file_size = ftell(infile);
+  if(file_size < 0) {
+    fclose(infile);
+    return API_KEY_READ_ERROR;
+  }
+
+  char * buffer = (char *)malloc(file_size + 1);
+  if(buffer == NULL) {
+    fclose(infile);
+    return API_KEY_READ_ERROR;
+  }
+
+  fseek(infile, 0, SEEK_SET);
+
+  const size_t read_size = fread(buffer, 1, 
+    file_size, infile);
+
+  if(read_size != (size_t)file_size) {
+    free(buffer);
+    fclose(infile);
+    return API_KEY_READ_ERROR;
+  }
+  buffer[file_size] = '\0'; // null-terminate the buffer
+  fclose(infile);
+
+
+  // trim leading/trailing whitespace so newline-terminated files work out of the box
+  size_t begin = 0;
+
+  while(begin < file_size && isspace((unsigned char)buffer[begin])) {
+    begin++;
+  }
+
+  size_t end = file_size;
+  while(end > begin && isspace((unsigned char)buffer[end - 1])) {
+    end--;
+  }
+
+  size_t key_length = end - begin;
+
+  char * key_no_whitspace = (char *)malloc(key_length + 1);
+  if(key_no_whitspace == NULL) {
+    free(buffer);
+    return API_KEY_READ_ERROR;
+  }
+  memcpy(key_no_whitspace, buffer + begin, key_length);
+  free(buffer);
+  key_no_whitspace[key_length] = '\0';
+  *key_out = key_no_whitspace;
+  *key_out_size = key_length;
+    
+  return API_KEY_READ_OK;
+}
 
 
 int get_stop_list_size(void) {

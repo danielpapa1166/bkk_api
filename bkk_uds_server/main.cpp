@@ -22,12 +22,6 @@
 #include <thread>
 #include <unistd.h>
 
-#if defined(__GNUC__) || defined(__clang__)
-#define BKK_MAYBE_UNUSED __attribute__((unused))
-#else
-#define BKK_MAYBE_UNUSED
-#endif
-
 
 static const int MAX_EVENTS = 10;
 static std::string bkk_api_key; 
@@ -35,7 +29,6 @@ static std::string bkk_api_key;
 
 static int init_server(int * const event_fd, int * const server_fd);
 static void print_usage(const char * prog_name);
-static std::string read_api_key_from_file(const std::string & path);
 static void handle_client(int client_fd, UdsCache & cache); 
 static bkk_api_status_t fresh_fetch_and_update_cache(
   const std::string & stop_id, UdsCache & cache, std::vector<Arrival> * arrivals_out);
@@ -75,7 +68,7 @@ int main(int argc, char* argv[]) {
 
   if(!config.api_key_file_path.empty()) {
     try {
-      bkk_api_key = read_api_key_from_file(config.api_key_file_path);
+      bkk_api_key = "";
     } catch (const std::exception& e) {
       log_error("Init", ("Failed to read API key from file: " + std::string(e.what())).c_str());
       return cleanup_and_return(1);
@@ -153,30 +146,6 @@ static void print_usage(const char * prog_name) {
   printf("Usage: %s [-k api_key_file] "
     "[-f freshness_seconds] [-s staleness_seconds] [-l max_cache_size]\n",
     prog_name);
-}
-
-
-static std::string read_api_key_from_file(const std::string & path) {
-  std::ifstream infile(path);
-  if(!infile.is_open()) {
-    throw std::runtime_error("cannot open file: " + path);
-  }
-
-  std::string key;
-  std::getline(infile, key);
-
-  // trim leading/trailing whitespace so newline-terminated files work out of the box
-  size_t begin = 0;
-  while(begin < key.size() && std::isspace((unsigned char)key[begin])) {
-    begin++;
-  }
-
-  size_t end = key.size();
-  while(end > begin && std::isspace((unsigned char)key[end - 1])) {
-    end--;
-  }
-
-  return key.substr(begin, end - begin);
 }
 
 
