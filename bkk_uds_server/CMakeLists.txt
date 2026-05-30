@@ -5,7 +5,7 @@ set(BKK_UDS_SERVER_SOURCES
     bkk_cache.cpp
     bkk_thread_pool.cpp 
     bkk_arg_parser.cpp
-    ../submodules/cJSON/cJSON.c
+    ${CJSON_DIR}/cJSON.c
 )
 
 add_executable(bkk_uds_server ${BKK_UDS_SERVER_SOURCES})
@@ -14,7 +14,7 @@ target_include_directories(bkk_uds_server
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../bkk_uds
-        ${CMAKE_CURRENT_SOURCE_DIR}/../submodules
+        ${CJSON_DIR}/..
 )
 
 target_link_libraries(bkk_uds_server

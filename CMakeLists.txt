@@ -16,6 +16,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 find_package(CURL REQUIRED)
 
+# Paths to cJSON and rbuflogd sources. Defaults point to the conventional
+# submodules/ locations so Yocto builds (which fetch them there via destsuffix)
+# and fresh git clones with --recurse-submodules both work out of the box.
+# Override with -DCJSON_DIR=... or -DRBUFLOGD_DIR=... for standalone builds
+# that reference the top-level project copies.
+set(CJSON_DIR    "${CMAKE_CURRENT_SOURCE_DIR}/submodules/cJSON"    CACHE PATH "cJSON source directory")
+set(RBUFLOGD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/submodules/rbuflogd" CACHE PATH "rbuflogd source directory")
+
 find_package(nlohmann_json 3.2.0 QUIET)
 if(NOT nlohmann_json_FOUND)
     include(FetchContent)
@@ -31,7 +39,7 @@ add_library(bkk_stop_utils STATIC bkk_uds/bkk_stop_utils.c)
 target_include_directories(bkk_stop_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/bkk_uds)
 
 # Import rbuflogd targets without enabling its daemon/test executables in default ALL builds.
-add_subdirectory(submodules/rbuflogd EXCLUDE_FROM_ALL)
+add_subdirectory(${RBUFLOGD_DIR} ${CMAKE_BINARY_DIR}/rbuflogd_build EXCLUDE_FROM_ALL)
 
 add_subdirectory(bkk_uds_server)
 add_subdirectory(bkk_uds_client)
