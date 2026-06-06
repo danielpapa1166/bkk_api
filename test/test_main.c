@@ -7,19 +7,19 @@
 #include <time.h>
 #include <unistd.h>
 
-const char * test_stop_id = "F02122";
+const char * test_stop_id = NULL;
 
 static void print_usage(const char *prog_name) {
-  printf("Usage: %s [-s stop_name_substring]\n", prog_name);
+  printf("Usage: %s [-s stop_name_substring] [-i stop_id] [-k api_key_file] [-h help]\n", prog_name);
 }
 
 int main(int argc, char **argv) {
   rbuflogd_logger_init("bkk_clnt");
 
-  const char * substring = "Kossuth";
+  const char * substring = NULL;
   const char * key_path = NULL; 
   int opt;
-  while((opt = getopt(argc, argv, "s:h:k:")) != -1) {
+  while((opt = getopt(argc, argv, "s:h:k:i:")) != -1) {
     switch(opt) {
       case 's':
         if(optarg != NULL && optarg[0] != '\0') {
@@ -35,6 +35,14 @@ int main(int argc, char **argv) {
         }
         else {
           printf("Invalid API key file path\n");
+        }
+        break;
+      case 'i':
+        if(optarg != NULL && optarg[0] != '\0') {
+          test_stop_id = optarg;
+        }
+        else {
+          printf("Invalid stop id\n");
         }
         break;
       default:
@@ -62,10 +70,23 @@ int main(int argc, char **argv) {
   clock_gettime(CLOCK_MONOTONIC, &t_start);
   size_t * indices = NULL;
   size_t count = 0;
-  bkk_stop_stat_t stat = find_stops_by_name_substring(
-    substring, 
-    &indices, 
-    &count);
+  bkk_stop_stat_t stat = BKK_STOP_NOT_FOUND; 
+  if(substring == NULL) {
+    if(test_stop_id == NULL) {
+      log_error("Init", "Either stop name substring or stop id must be provided");
+      print_usage(argv[0]);
+      return 1;
+    }
+    else {
+      substring = "";
+    }
+  }
+  else {
+    stat = find_stops_by_name_substring(
+      substring, 
+      &indices, 
+      &count);
+  }
 
   if(stat == BKK_STOP_FOUND) {
     printf("Found %zu stops matching '%s':\n", count, substring);
@@ -73,6 +94,11 @@ int main(int argc, char **argv) {
   } 
   else {
     printf("No stops found matching '%s'\n", substring);
+  }
+
+  if(test_stop_id != NULL) {
+    printf("Using stop id: %s\n", test_stop_id);
+    count = 1;
   }
   clock_gettime(CLOCK_MONOTONIC, &t_end);
   long elapsed_us = (t_end.tv_sec - t_start.tv_sec) * 1000000L
@@ -89,14 +115,20 @@ int main(int argc, char **argv) {
 
   for (size_t i = 0; i < count; i++) {
     bkk_stop_t stop;
-    const bkk_stop_stat_t stat = find_stop_by_index(indices[i], &stop);
-    if(stat != BKK_STOP_FOUND) {
-      printf("Failed to retrieve stop at index %zu\n", indices[i]);
-      continue;
-    }
 
     bkk_uds_request_t request = { 0 };
-    strncpy(request.stop_id, stop.stop_id, sizeof(request.stop_id) - 1);
+    if(test_stop_id != NULL) {
+      strncpy(request.stop_id, test_stop_id, sizeof(request.stop_id) - 1);
+    }
+    else {
+      const bkk_stop_stat_t stat = find_stop_by_index(indices[i], &stop);
+      if(stat != BKK_STOP_FOUND) {
+        printf("Failed to retrieve stop at index %zu\n", indices[i]);
+        continue;
+      }
+      strncpy(request.stop_id, stop.stop_id, sizeof(request.stop_id) - 1);
+
+    }
     strncpy(request.api_key, key_val, sizeof(request.api_key) - 1);
 
     const bkk_client_status_t res = send_bkk_uds_query(&request, &response);
@@ -104,7 +136,7 @@ int main(int argc, char **argv) {
 
     snprintf(msg, sizeof(msg), 
       "Query for stop_id %s returned status: %d, api fetch status: %s", 
-      stop.stop_id, 
+      request.stop_id, 
       (int)res, 
       error_code_to_string(api_status));
       
@@ -113,10 +145,10 @@ int main(int argc, char **argv) {
 
     if(res == client_OK) {
       printf("Received %d arrivals for stop_id %s\n", 
-        response.number_of_arrivals, stop.stop_id);
+        response.number_of_arrivals, request.stop_id);
 
       for(int i = 0; i < response.number_of_arrivals; i++) {
-        printf("Arrival %d: Line: %s, Destination: %s, "
+        printf("Arrival %d: Line: %s, Vehicle Type: %s, Destination: %s, "
           "Departure Time: %s, Departs in: %d min\n", 
           i + 1, 
           response.arrivals[i].line_id, 
