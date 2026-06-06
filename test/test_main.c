@@ -120,6 +120,7 @@ int main(int argc, char **argv) {
           "Departure Time: %s, Departs in: %d min\n", 
           i + 1, 
           response.arrivals[i].line_id, 
+          vehicle_type_to_string(response.arrivals[i].vehicle_type),
           response.arrivals[i].destination, 
           response.arrivals[i].departure_time, 
           response.arrivals[i].departs_in_min);

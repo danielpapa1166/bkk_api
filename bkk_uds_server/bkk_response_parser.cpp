@@ -1,4 +1,5 @@
 #include "bkk_response_parser.hpp"
+#include "bkk_api_arrival.h"
 #include "cJSON/cJSON.h"
 #include <cmath>
 #include <cstring>
@@ -63,6 +64,50 @@ static std::string find_route_name_for_route_id(
 
   return "";
 }
+
+
+static vehicle_type_t find_type_for_route_id(
+    const std::string & route_id, 
+    const cJSON * references) {
+  
+  if ((references == nullptr) || route_id.empty()) {
+    return VEHICLE_TYPE_UNKNOWN;
+  }
+
+    cJSON* routes = cJSON_GetObjectItemCaseSensitive(references, "routes");
+  if (!cJSON_IsObject(routes)) {
+    return VEHICLE_TYPE_UNKNOWN;
+  }
+
+  cJSON* route = cJSON_GetObjectItemCaseSensitive(routes, route_id.c_str());
+  if (!cJSON_IsObject(route)) {
+    return VEHICLE_TYPE_UNKNOWN;
+  }
+
+  cJSON* type_item = cJSON_GetObjectItemCaseSensitive(route, "type");
+  if (cJSON_IsString(type_item) && (type_item->valuestring != nullptr)) {
+    const char* type_str = type_item->valuestring;
+    if      (strcmp(type_str, "BUS")              == 0) return VEHICLE_TYPE_BUS;
+    else if (strcmp(type_str, "TRAM")             == 0) return VEHICLE_TYPE_TRAM;
+    else if (strcmp(type_str, "TROLLEYBUS")       == 0) return VEHICLE_TYPE_TROLLEYBUS;
+    else if (strcmp(type_str, "SUBWAY")           == 0) return VEHICLE_TYPE_METRO;
+    else if (strcmp(type_str, "SUBURBAN_RAILWAY") == 0) return VEHICLE_TYPE_SUBURB_RAIL;
+    else if (strcmp(type_str, "RAIL")             == 0) return VEHICLE_TYPE_RAIL;
+    else if (strcmp(type_str, "FERRY")            == 0) return VEHICLE_TYPE_FERRY;
+    else if (strcmp(type_str, "CABLE_CAR")        == 0) return VEHICLE_TYPE_CABLE_CAR;
+    else if (strcmp(type_str, "FUNICULAR")        == 0) return VEHICLE_TYPE_FUNICULAR;
+    else if (strcmp(type_str, "GONDOLA")          == 0) return VEHICLE_TYPE_GONDOLA;
+    else if (strcmp(type_str, "COACH")            == 0) return VEHICLE_TYPE_COACH;
+    else if (strcmp(type_str, "BICYCLE")          == 0) return VEHICLE_TYPE_BICYCLE;
+    else if (strcmp(type_str, "CAR")              == 0) return VEHICLE_TYPE_CAR;
+    else if (strcmp(type_str, "WALK")             == 0) return VEHICLE_TYPE_WALK;
+    else if (strcmp(type_str, "LOCAL")            == 0) return VEHICLE_TYPE_LOCAL;
+    else if (strcmp(type_str, "TRANSIT")          == 0) return VEHICLE_TYPE_TRANSIT;
+  }
+
+  return VEHICLE_TYPE_UNKNOWN;
+}
+
 
 ArrivalsParseStatus parse_arrivals_response(
   const std::string& response_body,
@@ -149,6 +194,7 @@ ArrivalsParseStatus parse_arrivals_response(
     // find route information
     std::string route_id = find_route_id_for_trip(trip_id, references);
     std::string line = find_route_name_for_route_id(route_id, references);
+    vehicle_type_t vehicle_type = find_type_for_route_id(route_id, references);
     if (line.empty()) {
       line = !route_id.empty() ? route_id : "n.a.";
     }
@@ -208,6 +254,7 @@ ArrivalsParseStatus parse_arrivals_response(
       departure_time_str.c_str(), sizeof(arrival.departure_time) - 1);
     arrival.departure_time[sizeof(arrival.departure_time) - 1] = '\0';
     arrival.departs_in_min = departs_in_min;
+    arrival.vehicle_type = vehicle_type;
     arrival.timestamp = departure_time;
 
     output_arrivals->push_back(arrival);
